@@ -22,6 +22,22 @@ services:
     volumes:
       - splunk-var:/opt/splunk/var
 
+  aob:
+    image: splunk/splunk:latest
+    ports:
+      - "8001:8000"
+    environment:
+      - SPLUNK_PASSWORD=Changed@11
+      - SPLUNK_START_ARGS=--accept-license
+    volumes:
+      - aob-var:/opt/splunk/var
+    volumes:
+      - aob-etc:/opt/splunk/etc
+
 volumes:
   splunk-var:
     external: false
+  aob-var:
+    external: false
+  aob-etc:
+      external: false

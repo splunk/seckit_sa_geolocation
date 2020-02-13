@@ -80,6 +80,8 @@ class ConfigApp(admin.MConfigHandler):
         conf_mgr = conf.ConfManager(splunkd_uri=scc.getMgmtUri(), session_key=self.getSessionKey(),
                                     app_name=self.appName, owner='-')
         script_enabled = int(args['script_enabled'][0])
+        account = args['account'][0]
+
         stanza = {"interval": interval}
         success = conf_mgr.update_data_input("script",
                                              "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoip_update.py",

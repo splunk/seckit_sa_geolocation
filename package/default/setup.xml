@@ -3,8 +3,13 @@
 		<input field="script_enabled">
 			<label>Enable Splunk Enterprise to automatically update the maxmind mmdb lookup table with the latest available database published by MaxMind</label>
 			<type>bool</type>
+      		<input field="account">
+			    <label>account</label>
+			<type>text</type>		
 		</input>       
+          
 	</block>
+
 	<block title="Proxy Settings" endpoint="seckit_sa_geolocation_setup/seckit_sa_geolocation_proxy" entity="seckit_sa_geolocation_proxy">
 		<input field="proxy_enabled">
 			<label>Enable proxy</label>
