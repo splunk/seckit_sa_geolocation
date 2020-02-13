@@ -9,6 +9,7 @@ from splunktalib.common import log
 import splunktalib.rest as rest
 import splunktalib.common.util as utils
 import splunk.clilib.cli_common as scc
+
 from xml.etree import cElementTree as ET
 import csv
 import os
@@ -17,7 +18,7 @@ import traceback
 import splunk_cluster as sc
 
 utils.remove_http_proxy_env_vars()
-logger = log.Logs().get_logger('ta_symantec-ep', level=logging.DEBUG)
+logger = log.Logs().get_logger('seckit_sa_geolocation', level=logging.DEBUG)
 
 
 def construct_url(base_url):
@@ -27,57 +28,6 @@ def construct_url(base_url):
     for i in order_list:
         url_list.append(base_url+"?azid="+i)
     return url_list
-
-
-def extract_xml(http, url_list, retry=3):
-    item_list = []
-    for url in url_list:
-        resp, content = None, None
-        for _ in range(retry):
-            try:
-                logger.info("Requesting url:"+url)
-                resp, content = http.request(url, 'GET')
-            except Exception:
-                logger.error("ERROR in requesting url:"+url)
-            else:
-                if resp.status not in (200, 201):
-                    logger.error("Error response."+str(resp.status))
-                else:
-                    break
-        if resp is None and content is None:
-            logger.error("Please check the firewall or proxy settings.")
-            sys.exit()
-        else:
-            root = ET.fromstring(content)
-            items = root[0].findall('item')
-            i_dict = {}
-            for item in items:
-                i_dict['title'] = item.find('title').text
-                i_dict['link'] = item.find('link').text
-                i_dict['pubDate'] = item.find('pubDate').text
-                s = str(item.find('description').text)
-                if "Risk Level" in s:
-                    i_dict['riskLevel'] = s[s.find(
-                        'Risk Level')+11:s.find('.')].lstrip()
-                if "Type" in s:
-                    i_dict['type'] = s[s.find(
-                        'Type')+5:s.find('.', s.find('Type')+5)].lstrip()
-                item_list.append(dict(i_dict))
-    return item_list
-
-
-def save_lookup_file(file_name, item_list):
-    try:
-        with open(file_name, 'w') as csv_file:
-            fieldnames = ['title', 'link', 'pubDate', 'riskLevel', 'type']
-            writer = csv.DictWriter(
-                csv_file, fieldnames=fieldnames, restval='')
-
-            writer.writeheader()
-            for item in item_list:
-                writer.writerow(item)
-    except Exception:
-        logger.error("ERROR writing result to csv file.")
 
 
 def run():
@@ -91,11 +41,11 @@ def run():
     server_info = sc.ServerInfo(splunkd_uri, session_key)
     if not server_info.is_shc_member() or server_info.is_captain():
         logger.info(
-            "This is a single instance or cluster captain. Run the malare_category_update.")
-        app_name = "Splunk_TA_symantec-ep"
+            "This is a single instance or cluster captain. Run the update.")
+        app_name = "SecKit_SA_geolocation"
         conf_name = "seckit_sa_geolocation"
         stanza = "seckit_sa_geolocation_proxy"
-        base_url = "https://www.symantec.com/xml/rss/azlistings.jsp"
+
         encrypted = "******"
         conf_manager = conf.ConfManager(splunkd_uri=splunkd_uri, session_key=session_key,
                                         owner='-', app_name=app_name)

@@ -11,9 +11,9 @@ import traceback
 import os
 
 utils.remove_http_proxy_env_vars()
-logger = log.Logs().get_logger('ta_symantec-ep', level=logging.DEBUG)
+logger = log.Logs().get_logger('seckit_sa_geolocation', level=logging.DEBUG)
 script_path = os.path.join('$SPLUNK_HOME', 'etc', 'apps',
-                           'Splunk_TA_symantec-ep', 'bin', 'malware_category_update.py')
+                           'SecKit_SA_geolocation', 'bin', 'geoip_update.py')
 
 
 """

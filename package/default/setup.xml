@@ -5,20 +5,6 @@
 			<type>bool</type>
 		</input>       
 	</block>
-
-  <block title="Add new credentials" endpoint="storage/passwords" entity="_new">
-    <input field="name">
-      <label>Account ID</label>
-      <type>text</type>
-    </input>
-
-    <input field="password">
-      <label>Password</label>
-      <type>password</type>
-    </input>
-  </block>
-
-
 	<block title="Proxy Settings" endpoint="seckit_sa_geolocation_setup/seckit_sa_geolocation_proxy" entity="seckit_sa_geolocation_proxy">
 		<input field="proxy_enabled">
 			<label>Enable proxy</label>

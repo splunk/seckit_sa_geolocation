@@ -7,7 +7,7 @@ from splunktalib.common import log
 import logging
 
 utils.remove_http_proxy_env_vars()
-logger = log.Logs().get_logger('ta_symantec-ep', level=logging.DEBUG)
+logger = log.Logs().get_logger('seckit_sa_geolocation', level=logging.DEBUG)
 
 """
 Copyright (C) 2005 - 2015 Splunk Inc. All Rights Reserved.
@@ -52,7 +52,7 @@ class ConfigApp(admin.MConfigHandler):
         confDict = self.readConf("inputs")
         if None != confDict:
             for stanza, settings in list(confDict.items()):
-                if stanza in ['script://$SPLUNK_HOME/etc/apps/Splunk_TA_symantec-ep/bin/malware_category_update.py']:
+                if stanza in ['script://$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoip_update.py']:
                     for key, val in list(settings.items()):
                         if key == "disabled":
                             if val == '0':
@@ -82,17 +82,17 @@ class ConfigApp(admin.MConfigHandler):
         script_enabled = int(args['script_enabled'][0])
         stanza = {"interval": interval}
         success = conf_mgr.update_data_input("script",
-                                             "$SPLUNK_HOME/etc/apps/Splunk_TA_symantec-ep/bin/malware_category_update.py",
+                                             "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoip_update.py",
                                              stanza)
         if not success:
             logger.error("ERROR in updating script input")
 
         if script_enabled == 1:
             conf_mgr.enable_data_input("script",
-                                       "$SPLUNK_HOME/etc/apps/Splunk_TA_symantec-ep/bin/malware_category_update.py")
+                                       "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoip_update.py")
         else:
             conf_mgr.disable_data_input("script",
-                                        "$SPLUNK_HOME/etc/apps/Splunk_TA_symantec-ep/bin/malware_category_update.py")
+                                        "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoip_update.py")
 
 
 # initialize the handler
