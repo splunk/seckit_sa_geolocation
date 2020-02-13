@@ -70,5 +70,5 @@ jinja_app.Jinja('package/default/app.conf',
 sources = Glob('package/*', exclude='app.manifest.jinja')
 
 env.TarFile('build/${SPLUNK_BUILD_APP_TITLE}.tar.tgz', sources,
-            TARFILEMAPPINGS=[('package', 'splunk_ta_symantec_ep'),
+            TARFILEMAPPINGS=[('package', 'SecKit_SA_geolocation'),
                              ])

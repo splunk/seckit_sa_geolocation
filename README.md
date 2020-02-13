@@ -1,1 +1,1 @@
-# splunk_ta_symantec_ep
+# splunk_ta_seckit_sa_geolocation
