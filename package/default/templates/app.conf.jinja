@@ -1,0 +1,20 @@
+# this add-on is powered by splunk Add-on builder
+[install]
+state_change_requires_restart = true
+build = 2
+
+[launcher]
+author = {{ SPLUNK_BUILD_AUTHOR|default('unknown') }}
+version = {{ SPLUNK_BUILD_VERSION|default('0.1.0') }}
+
+[ui]
+is_visible = 0
+label = {{ SPLUNK_BUILD_APP_TITLE|default('TA IN DEV UNKNOWN') }}
+docs_section_override = AddOns:released
+
+[package]
+id = {{ SPLUNK_BUILD_APP_NAME|default('TA_UNKNOWN') }}
+
+[id]
+name =  {{ SPLUNK_BUILD_APP_NAME|default('TA_UNKNOWN') }}
+version = {{ SPLUNK_BUILD_VERSION|default('0.1.0') }}
