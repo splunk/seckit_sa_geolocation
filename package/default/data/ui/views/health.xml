@@ -1,0 +1,41 @@
+<dashboard theme="dark">
+  <label>Seckit Geolocation Health</label>
+  <row>
+    <panel>
+      <title>MMDB Status</title>
+      <table>
+        <search>
+          <query>index=_internal sourcetype="seckitsageolocation:log" mmdb=* | stats latest(size) as size latest(mtime) as mtime by mmdb</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Where is google DNS</title>
+      <table>
+        <search>
+          <query>| makeresults | eval src="8.8.8.8" | `seckit_iplocation(src,src)` | fields - _time | transpose | rename column as field</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>
