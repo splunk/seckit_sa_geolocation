@@ -16,7 +16,6 @@ RUN mkdir -p /work/test-results/functional
 COPY entrypoint.sh /
 COPY ./* /work/tests/
 COPY pytest-ci.ini /work/pytest.ini
-COPY ./data /work/tests/data
-#WORKDIR /work
+
 CMD /entrypoint.sh
 
