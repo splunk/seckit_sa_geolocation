@@ -1,0 +1,149 @@
+version: 2.1
+
+test: &test
+  steps:
+    - checkout
+    - setup_remote_docker:
+        docker_layer_caching: true
+    - run:
+        name: Setup for testing
+        command: |
+          pip install -r tests/requirements.txt
+          mkdir test-results
+    - semver-orb/export-tag
+    - run:
+        name: test
+        command: |
+          docker-compose -f tests/docker-compose-ci.yml build 
+          docker-compose -f tests/docker-compose-ci.yml up --abort-on-container-exit
+        no_output_timeout: 1h
+    - run:
+        name: collect results
+        when: always
+        command: |
+          docker container create --name dummy \
+                              -v tests_results:/work/test-results \
+                              registry.access.redhat.com/ubi7/ubi
+          docker cp dummy:/work/test-results/test.xml test-results/
+    - store_artifacts:
+        path: test-results
+        destination: test-results
+    - store_test_results:
+        path: test-results
+
+publish: &publish
+  steps:
+    - setup_remote_docker:
+        docker_layer_caching: true
+    - checkout
+    - run:
+        name: Docker Login
+        command: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+    - semver-orb/export-tag
+    - run:
+        name: Build
+        command: |
+          echo $SEMVER_VERSION >package/VERSION
+          SCONS
+    - go/install
+    - run:
+        name: "Publish edge on GitHub"
+        command: |
+          PATH=$PATH:/usr/local/go/bin
+          go get -v -u github.com/tcnksm/ghr
+          if [ -n "${CIRCLE_TAG}" ]; then VERSION=${CIRCLE_TAG}; else VERSION="${DOCKER_TAG}"; fi
+          $HOME/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${GHR_FLAGS} -delete ${VERSION} /tmp/workspace/
+
+    - store_artifacts:
+        path: /tmp/workspace/
+
+orbs:
+  docker: circleci/docker@0.5.20
+  go: circleci/go@0.2.0
+  snyk: snyk/snyk@0.0.8
+  versioning: kollex/versioning@1.0.0
+  semver-orb: tv2norge/semver-orb@0.0.1
+
+jobs:
+  test-splunk-8-0:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SPLUNK: "8.0"
+    <<: *test
+  test-splunk-7-3:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SPLUNK: "7.3"
+    <<: *test
+  test-splunk-7-2:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SPLUNK: "7-2"
+    <<: *test
+
+  publish-edge:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SPLUNK: "8.0"
+      DOCKER_TAG: edge
+      GHR_FLAGS: -prerelease
+    <<: *publish
+  publish-latest:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SPLUNK: "8.0"
+      DOCKER_TAG: latest
+    <<: *publish
+  publish-tag:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SPLUNK: "8.0"
+    <<: *publish
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - test-splunk-8-0
+      - test-splunk-7-3
+      - test-splunk-7-2
+      - publish-pre-gh-edge:
+          type: approval
+          requires:
+            - test-splunk-8-0
+          filters:
+            branches:
+              only:
+                - develop
+      - publish-edge:
+          requires:
+            - publish-pre-gh-edge
+      - publish-pre-gh-latest:
+          type: approval
+          requires:
+            - test-splunk-8-0
+          filters:
+            branches:
+              only:
+                - master
+      - publish-latest:
+          requires:
+            - publish-pre-gh-latest
+      - publish-pre-gh-tag:
+          type: approval
+          requires:
+            - test-splunk-8-0
+          filters:
+            tags:
+              only: /^\d*\.\d*\.\d*.*$/
+            branches:
+              ignore: /.*/
+      - publish-tag:
+          requires:
+            - publish-pre-gh-tag
