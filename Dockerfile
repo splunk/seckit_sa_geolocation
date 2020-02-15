@@ -4,3 +4,4 @@ ARG SPLUNK_APP=TA_UNKNOWN
 ARG SOURCE_PACKAGE=package
 
 COPY $SOURCE_PACKAGE /opt/splunk/etc/apps/$SPLUNK_APP
+COPY test-data/ /opt/splunk/etc/apps/$SPLUNK_APP/data

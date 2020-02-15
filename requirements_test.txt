@@ -1,7 +1,9 @@
 scons
 scons-tool-loader
 scons-tool-archives
-git+ssh://git@github.com/splunk/pytest-splunk-addon.git
 https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
 pytest
 pytest-runner
+requests
+httplib2
+-r tests/requirements.txt
