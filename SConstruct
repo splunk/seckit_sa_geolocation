@@ -67,8 +67,8 @@ jinja_app.Depends(target='package/default/app.conf', dependency='build_variables
 jinja_app.Jinja('package/default/app.conf',
                 os.path.join('templates', 'app.conf.jinja'))
 
-sources = Glob('package/*', exclude='app.manifest.jinja')
+sources = Glob('package/*', exclude=['app.manifest.jinja','.*'])
 
-env.TarFile('build/${SPLUNK_BUILD_APP_TITLE}.tar.tgz', sources,
-            TARFILEMAPPINGS=[('package', 'SecKit_SA_geolocation'),
+env.TarFile('build/${SPLUNK_BUILD_APP_TITLE}.tgz', sources,
+            TARFILEMAPPINGS=[('package', '.'),
                              ])

@@ -10,7 +10,7 @@ SPLUNK_BUILD_APP_COMPANY = 'Splunk, Inc.'
 SPLUNK_BUILD_EMAIL = 'rfaircloth@splunk.com'
 #
 MAIN_DESCRIPTION = 'Geolocation with Maxmind'
-SPLUNK_BUILD_APP_TITLE = 'Geolocation with Maxmind'
+SPLUNK_BUILD_APP_TITLE = 'SecKit_SA_geolocation'
 #
 SPLUNKBASE = 'https://splunkbase.splunk.com/app/3121/'
 REPOSITORY = 'https://bitbucket.org/SPLServices/SecKit_SA_geolocation/'

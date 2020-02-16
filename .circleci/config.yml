@@ -85,6 +85,39 @@ jobs:
       SPLUNK: "7-2"
     <<: *test
 
+  inspect:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Install Appinspect
+          command: |
+            pip install https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
+      - run:
+          name: Install Build deps
+          command: |
+            pip install -r requirements_test.txt
+      - run:
+          name: build
+          command: |
+            mkdir test-results
+            scons
+      - run:
+          name: appinspect test
+          command: |
+            splunk-appinspect inspect --data-format junitxml --output-file test-results/appinspect-test.xml --excluded-tags manual build/$(ls  build) || true
+      - run:
+          name: appinspect precert
+          command: |
+            splunk-appinspect inspect --data-format junitxml --output-file test-results/appinspect-precert.xml --excluded-tags manual --mode=precert build/$(ls  build) || true
+      - run:
+          name: appinspect cloud
+          command: |
+            splunk-appinspect inspect --data-format junitxml --output-file test-results/appinspect-cloud.xml --excluded-tags manual --mode precert --included-tags cloud build/$(ls  build) || true
+
   publish-edge:
     docker:
       - image: circleci/python:3.7
