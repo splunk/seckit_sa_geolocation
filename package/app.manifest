@@ -38,14 +38,10 @@
       "uri": null
     }
   },
-  "dependencies": {
-
-  },
+  "dependencies": null,
   "tasks": ["geoipupdate","geoipupdate://main"],
-  "inputGroups": {
-  },
-  "incompatibleApps": {
-  },
+  "inputGroups": null,
+  "incompatibleApps": null,
   "platformRequirements": {
     "splunk": {
       "Enterprise": "*"
