@@ -32,14 +32,17 @@ jobs:
             VERSION_DOCKER_M=$(echo  $VERSION | sed -n 's/v\([0-9]\).*/\1/p')
             VERSION_DOCKER_MM=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\).*/\1/p')
             VERSION_DOCKER_MMP=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
-            crudini --set package/default/app.conf launcher version $VERSION_SPLUNK
-            crudini --set package/default/app.conf id version $VERSION_SPLUNK
-            crudini --set package/default/app.conf install build $(date +%s)
+            BUILD_DIR=build/source/$(crudini --get package/default/app.conf id name)
+            mkdir -p $BUILD_DIR
+            cp -r package $BUILD_DIR
+            crudini --set $BUILD_DIR/default/app.conf launcher version $VERSION_SPLUNK
+            crudini --set $BUILD_DIR/default/app.conf id version $VERSION_SPLUNK
+            crudini --set $BUILD_DIR/default/app.conf install build $(date +%s)
             slim generate-manifest package --update >/tmp/app.manifest   || true
-            cp  /tmp/app.manifest  package/app.manifest
+            cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
       - store_artifacts:
-          path: package
-          destination: source-package
+          path: build
+          destination: build
 
 workflows:
   build:
