@@ -29,6 +29,7 @@ jobs:
             source ~/.venv/bin/activate
             VERSION=$(./semtag getcurrent)
             VERSION_SPLUNK=$(echo $VERSION | sed 's/\-[^+]*+/B/g' | sed 's/v//')
+            VERSION_PACKAGE=$(echo $VERSION | sed 's/\-[^+]*+/-B/g' | sed 's/v//')
             VERSION_DOCKER_M=$(echo  $VERSION | sed -n 's/v\([0-9]\).*/\1/p')
             VERSION_DOCKER_MM=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\).*/\1/p')
             VERSION_DOCKER_MMP=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
@@ -45,7 +46,7 @@ jobs:
             mkdir -p build/package/deployment
             slim package -o build/package/splunkbase $BUILD_DIR 
             ls build/package/splunkbase
-            slim partition -o build/package/deployment build/package/splunkbase/${PACKAGE_ID}-${VERSION_SPLUNK}.tar.gz
+            slim partition -o build/package/deployment build/package/splunkbase/${PACKAGE_ID}-${VERSION_PACKAGE}.tar.gz
       - store_artifacts:
           path: build/source
           destination: build-source
