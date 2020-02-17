@@ -35,7 +35,8 @@ jobs:
             crudini --set package/default/app.conf launcher version $VERSION_SPLUNK
             crudini --set package/default/app.conf id version $VERSION_SPLUNK
             crudini --set package/default/app.conf install build $(date +%s)
-            slim generate-manifest package --output package/app.manifest --update || true
+            slim generate-manifest package --output /tmp/app.manifest --update || true
+            cp  /tmp/app.manifest  package/app.manifest
       - store_artifacts:
           path: package
           destination: source-package
