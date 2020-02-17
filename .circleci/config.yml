@@ -24,7 +24,7 @@ jobs:
             pip install https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.0.tar.gz
             pip install git+https://github.com/pixelb/crudini
       - run:
-          name: version
+          name: version and package
           command: |
             source ~/.venv/bin/activate
             VERSION=$(./semtag getcurrent)
@@ -32,7 +32,8 @@ jobs:
             VERSION_DOCKER_M=$(echo  $VERSION | sed -n 's/v\([0-9]\).*/\1/p')
             VERSION_DOCKER_MM=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\).*/\1/p')
             VERSION_DOCKER_MMP=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
-            BUILD_DIR=build/source/$(crudini --get package/default/app.conf id name)
+            PACKAGE_ID=$(crudini --get package/default/app.conf id name)
+            BUILD_DIR=build/source/$PACKAGE_ID
             mkdir -p $BUILD_DIR
             cp -r package/* $BUILD_DIR/
             crudini --set $BUILD_DIR/default/app.conf launcher version $VERSION_SPLUNK
@@ -40,10 +41,16 @@ jobs:
             crudini --set $BUILD_DIR/default/app.conf install build $(date +%s)
             slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
             cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
+            mkdir -p build/package/splunkbase
+            mkdir -p build/package/deployment
+            slim package -o build/package/splunkbase $BUILD_DIR 
+            slim partition -o build/package/deployment build/package/splunkbase/${PACKAGE_ID}_${VERSION_SPLUNK}.tgz
       - store_artifacts:
-          path: build
-          destination: build
-
+          path: build-source
+          destination: build-source
+      - store_artifacts:
+          path: build-package
+          destination: build-package
 workflows:
   build:
     jobs:
