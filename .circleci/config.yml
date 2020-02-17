@@ -22,7 +22,7 @@ jobs:
             source ~/.venv/bin/activate
             pip install semantic_version
             pip install https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.0.tar.gz
-            pip install crudini
+            pip install git+https://github.com/pixelb/crudini
       - run:
           name: version
           command: |
