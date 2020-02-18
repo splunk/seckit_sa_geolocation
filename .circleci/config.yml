@@ -55,7 +55,7 @@ jobs:
       - persist_to_workspace:
           root: build
           paths:
-            - package/splunkbase/*
+            - build/splunkbase/*
 
   test_appinspect: # defines a parameterized job
     description: Create the Splunk Packages and run appinspect
@@ -78,7 +78,7 @@ jobs:
             mkdir test-results || true
             ls -l /tmp
             ls -l /tmp/workspace
-            ls -l /tmp/workspace/build
+            ls -l /tmp/workspace/build  
             echo $(ls /tmp/workspace/build/splunkbase/*)
             splunk-appinspect inspect  --mode test --data-format junitxml --output-file test-results/appinspect-mode-test.xml $(ls /tmp/workspace/build/splunkbase/*)
       - store_artifacts:
