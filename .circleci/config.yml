@@ -194,6 +194,7 @@ jobs:
           command: |
             git merge master
             git checkout master
+            git pull
             git merge development
 
   publish:
