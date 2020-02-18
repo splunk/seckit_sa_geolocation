@@ -137,6 +137,9 @@ jobs:
     docker:
       - image: circleci/python:3.7
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "73:9c:f8:91:b0:cc:4a:d5:17:af:ce:fc:61:69:ab:92"
       - checkout
       - run:
           name: inspect
