@@ -6,3 +6,12 @@ This the the SecKit Add-on for MaxMind offical releases can be found on [Splunkb
 
 Can be found [here](package/README.md)
 
+# CI Status
+
+## Master
+
+[![CircleCI](https://circleci.com/gh/splunk/seckit_sa_geolocation/tree/master.svg?style=svg)](https://circleci.com/gh/splunk/seckit_sa_geolocation/tree/master)
+
+## Develop
+
+[![CircleCI](https://circleci.com/gh/splunk/seckit_sa_geolocation/tree/develop.svg?style=svg)](https://circleci.com/gh/splunk/seckit_sa_geolocation/tree/develop)
