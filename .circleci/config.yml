@@ -190,7 +190,7 @@ jobs:
             - "73:9c:f8:91:b0:cc:4a:d5:17:af:ce:fc:61:69:ab:92"
       - checkout
       - run:
-          name: TAG
+          name: Merge
           command: |
             git config --global user.email "addonreleasesrv@splunk.com"
             git config --global user.name "Add on release service"
