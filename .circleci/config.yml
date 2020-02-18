@@ -15,7 +15,6 @@ test: &test
         command: |
           pip install -r tests/requirements.txt
           mkdir test-results
-    - semver-orb/export-tag
     - run:
         name: test
         command: |
