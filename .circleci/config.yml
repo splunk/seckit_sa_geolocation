@@ -68,6 +68,7 @@ jobs:
             source ~/.venv/bin/activate
             VERSION=$(./semtag getcurrent)
             VERSION_SPLUNK=$(echo $VERSION | sed 's/\-[^+]*+/B/g' | sed 's/v//' | sed -n 's/\(.*\)\.\([0-9]\)*$/\1\2/p')
+            echo $VERSION_SPLUNK = $VERSION
             VERSION_PACKAGE=$(echo $VERSION | sed 's/\-[^+]*+/-B/g' | sed 's/v//')
             VERSION_DOCKER_M=$(echo  $VERSION | sed -n 's/v\([0-9]\).*/\1/p')
             VERSION_DOCKER_MM=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\).*/\1/p')
