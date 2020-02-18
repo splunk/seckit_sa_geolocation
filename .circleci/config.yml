@@ -47,9 +47,9 @@ jobs:
             slim package -o build/package/splunkbase $BUILD_DIR 
             ls build/package/splunkbase
       - persist_to_workspace:
-          root: .
+          root: /home/circleci/project
           paths:
-            - package/splunkbase
+            - build/package/splunkbase
       - store_artifacts:
           path: build/source/app.manifest
           destination: build-source
