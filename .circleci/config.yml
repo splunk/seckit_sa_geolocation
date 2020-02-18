@@ -46,7 +46,7 @@ jobs:
             mkdir -p build/package/deployment
             slim package -o build/package/splunkbase $BUILD_DIR 
             ls build/package/splunkbase
-            slim partition -o build/package/deployment build/package/splunkbase/${PACKAGE_ID}-${VERSION_PACKAGE}.tar.gz
+            slim partition -p -o build/package/deployment build/package/splunkbase/${PACKAGE_ID}-${VERSION_PACKAGE}.tar.gz
       - store_artifacts:
           path: build/source
           destination: build-source
