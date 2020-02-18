@@ -153,32 +153,37 @@ workflows:
             tags:
               ignore: /^v[0-9]+(\.[0-9]+)*$/
       - test_appinspect:
-          branches:
-            only: /.*/
-          tags:
-            ignore: /^v[0-9]+(\.[0-9]+)*$/
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - package
       - test-splunk-8-0:
-          branches:
-            only: /.*/
-          tags:
-            ignore: /^v[0-9]+(\.[0-9]+)*$/
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
       - test-splunk-7-3:
-          branches:
-            only: /.*/
-          tags:
-            ignore: /^v[0-9]+(\.[0-9]+)*$/
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
       - test-splunk-7-2:
-          branches:
-            only: /.*/
-          tags:
-            ignore: /^v[0-9]+(\.[0-9]+)*$/
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
       - tag-beta:
-          branches:
-            only: /.*/
-          tags:
-            ignore: /^v[0-9]+(\.[0-9]+)*$/
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
 # publish: &publish
 #   steps:
 #     - setup_remote_docker:
