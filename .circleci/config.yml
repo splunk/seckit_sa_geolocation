@@ -46,18 +46,7 @@ tag: &tag
         name: TAG
         command: |
           ./semtag ${SEMTAG}
-merge-beta-to-master:
-  - checkout
-  - add_ssh_keys:
-      fingerprints:
-        - "73:9c:f8:91:b0:cc:4a:d5:17:af:ce:fc:61:69:ab:92"
-  - checkout
-  - run:
-      name: TAG
-      command: |
-        git merge master
-        git checkout master
-        git merge development
+
 jobs:
   package: # defines a parameterized job
     description: Create the Splunk Packages and run appinspect
@@ -190,6 +179,22 @@ jobs:
     environment:
       SEMTAG: "final -s patch"
     <<: *tag
+
+  merge-beta-to-master:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "73:9c:f8:91:b0:cc:4a:d5:17:af:ce:fc:61:69:ab:92"
+      - checkout
+      - run:
+          name: TAG
+          command: |
+            git merge master
+            git checkout master
+            git merge development
 
   publish:
     docker:
