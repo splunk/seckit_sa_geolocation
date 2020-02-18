@@ -221,7 +221,6 @@ workflows:
           filters:
             branches:
               only: master
-
       - approval-tag-final-major:
           type: approval
           requires:
@@ -229,7 +228,6 @@ workflows:
       - tag-final-major:
           requires:
             - approval-tag-final-major
-
       - approval-tag-final-minor:
           type: approval
           requires:
@@ -237,7 +235,6 @@ workflows:
       - tag-final-minor:
           requires:
             - approval-tag-final-minor
-
       - approval-tag-final-patch:
           type: approval
           requires:
