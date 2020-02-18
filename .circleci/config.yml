@@ -197,7 +197,7 @@ jobs:
             git merge develop
             git push
 
-  publish:
+  publish-gh:
     docker:
       - image: circleci/python:3.7
     steps:
@@ -208,7 +208,7 @@ jobs:
       - checkout
       - go/install
       - run:
-          name: "Publish edge on GitHub"
+          name: "Publish on GitHub"
           command: |
             PATH=$PATH:/usr/local/go/bin
             go get -v -u github.com/tcnksm/ghr
@@ -216,6 +216,28 @@ jobs:
             PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
             [ "$(./semtag getfinal)" != "${CIRCLE_TAG}" ] && ISPRE="-prerelease" || ISPRE=""
             $HOME/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} -delete ${VERSION} $PACKAGE
+
+  publish-sbase:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - run:
+          name: Install utils
+          command: |
+            pip install git+https://github.com/pixelb/crudini
+      - run:
+          name: "Publish on Splunkbase"
+          command: |
+            source ./splunkbase
+            if [ -n "${CIRCLE_TAG}" ]; then VERSION=${CIRCLE_TAG}; else VERSION="${DOCKER_TAG}"; fi
+            PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
+            PACKAGE_ID=$(crudini --get package/default/app.conf id name)
+            curl -u ${SPLUNKBASE_USERNAME} --request POST https://splunkbase.splunk.com/api/v1/app/${SPLUNKBASE_ID}/new_release/ -F "files[]=@${PACKAGE}" -F "filename=${PACKAGE_ID}.spl" -F "splunk_versions=${SPLUNKBASE_SPLUNK_VERSION}"
 
 workflows:
   build:
@@ -302,7 +324,7 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v\d*\.\d*\.\d*.*$/
-      - publish:
+      - publish-gh:
           requires:
             - package
           filters:
