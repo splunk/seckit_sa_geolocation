@@ -79,13 +79,8 @@ jobs:
           command: |
             source ~/.venv/bin/activate
             mkdir test-results || true
-            ls -l /tmp
-            ls -l /tmp/workspace
-            ls -l /tmp/workspace/build  
-            ls -l /tmp/workspace/build/package  
-            ls -l /tmp/workspace/build/package/splunkbase  
-            echo $(ls /tmp/workspace/build/package/splunkbase/*)
-            splunk-appinspect inspect  --mode test --data-format junitxml --output-file test-results/appinspect-mode-test.xml $(ls /tmp/workspace/build/splunkbase/*)
+            PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
+            splunk-appinspect inspect  --mode test --data-format junitxml --output-file test-results/appinspect-mode-test.xml $PACKAGE
       - store_artifacts:
           path: test-results
           destination: test-results
