@@ -133,17 +133,52 @@ jobs:
     environment:
       SPLUNK: "7-2"
     <<: *test
+  tag-beta:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - run:
+          name: inspect
+          command: |
+            ./semtag alpha
 
 workflows:
   build:
     jobs:
-      - package
+      - package:
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
       - test_appinspect:
+          branches:
+            only: /.*/
+          tags:
+            ignore: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - package
-      - test-splunk-8-0
-      - test-splunk-7-3
-      - test-splunk-7-2
+      - test-splunk-8-0:
+          branches:
+            only: /.*/
+          tags:
+            ignore: /^v[0-9]+(\.[0-9]+)*$/
+      - test-splunk-7-3:
+          branches:
+            only: /.*/
+          tags:
+            ignore: /^v[0-9]+(\.[0-9]+)*$/
+      - test-splunk-7-2:
+          branches:
+            only: /.*/
+          tags:
+            ignore: /^v[0-9]+(\.[0-9]+)*$/
+      - tag-beta:
+          branches:
+            only: /.*/
+          tags:
+            ignore: /^v[0-9]+(\.[0-9]+)*$/
 # publish: &publish
 #   steps:
 #     - setup_remote_docker:
