@@ -55,7 +55,7 @@ jobs:
       - persist_to_workspace:
           root: build
           paths:
-            - build
+            - build/package/splunkbase/*
 
 package: # defines a parameterized job
   description: Create the Splunk Packages and run appinspect
@@ -64,7 +64,7 @@ package: # defines a parameterized job
   steps:
     - checkout
     - run:
-        name: Install 
+        name: Install
         command: |
           python -m venv ~/.venv
           source ~/.venv/bin/activate
@@ -80,7 +80,6 @@ package: # defines a parameterized job
     - store_artifacts:
         path: test-results
         destination: test-results
-
 
 workflows:
   build:
