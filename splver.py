@@ -10,8 +10,10 @@ regex = r"v([0-9]+\.[0-9]+\.[0-9]+)(?:-(a|b|r|d).*(?:\+|\.)(.*))?"
 test_str = sys.argv[1]
 
 subst = "\\1\\2\\3"
-
-result = re.sub(regex, subst, test_str, 0, re.MULTILINE)
+try:
+    result = re.sub(regex, subst, test_str, 0, re.MULTILINE)
+except:
+    result = re.sub(regex, "\\1", test_str, 0, re.MULTILINE)
 
 if result:
     print(result)
