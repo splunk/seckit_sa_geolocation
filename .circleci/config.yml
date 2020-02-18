@@ -5,6 +5,7 @@ version: 2.1
 #   snyk: snyk/snyk@0.0.8
 #   versioning: kollex/versioning@1.0.0
 #   semver-orb: tv2norge/semver-orb@0.0.1
+
 test: &test
   steps:
     - checkout
@@ -254,6 +255,14 @@ workflows:
       - tag-final-patch:
           requires:
             - approval-tag-final-patch
+  publish:
+    jobs:
+      - package:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d*\.\d*\.\d*.*$/
 # publish: &publish
 #   steps:
 #     - setup_remote_docker:
