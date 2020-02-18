@@ -194,7 +194,7 @@ jobs:
           command: |
             git config --global user.email "addonreleasesrv@splunk.com"
             git config --global user.name "Add on release service"
-            git merge master
+            git merge master -m "Merge from master"
             git checkout master
             git pull
             git merge develop
