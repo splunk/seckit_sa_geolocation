@@ -192,16 +192,20 @@ workflows:
               only: develop
       - approval-tag-beta:
           type: approval
-      - tag-beta:
-          requires:
-            - approval-tag-beta
           filters:
             branches:
               only: develop
+      - tag-beta:
+          requires:
+            - approval-tag-beta
       - tag-candidate:
           filters:
             branches:
               only: master
+      - approval-tag-final:
+          type: approval
+          requires:
+            - tag-candidate
 # publish: &publish
 #   steps:
 #     - setup_remote_docker:
