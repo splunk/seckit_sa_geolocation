@@ -47,7 +47,7 @@ jobs:
             slim package -o build/package/splunkbase $BUILD_DIR 
             ls build/package/splunkbase
       - persist_to_workspace:
-          root: build
+          root: .
           paths:
             - package/splunkbase
       - store_artifacts:
