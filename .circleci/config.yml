@@ -190,10 +190,14 @@ workflows:
           filters:
             branches:
               only: develop
+      - approval-tag-beta:
+          type: approval
       - tag-beta:
+          requires:
+            - approval-tag-beta
           filters:
             branches:
-              only: developx
+              only: develop
       - tag-candidate:
           filters:
             branches:
