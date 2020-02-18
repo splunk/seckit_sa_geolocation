@@ -57,29 +57,29 @@ jobs:
           paths:
             - package/splunkbase/*
 
-test_appinspect: # defines a parameterized job
-  description: Create the Splunk Packages and run appinspect
-  docker:
-    - image: circleci/python:3.7
-  steps:
-    - checkout
-    - run:
-        name: Install
-        command: |
-          python -m venv ~/.venv
-          source ~/.venv/bin/activate
-          pip install https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
-    - attach_workspace:
-        at: /tmp/workspace
-    - run:
-        name: inspect
-        command: |
-          source ~/.venv/bin/activate
-          mkdir test-results
-          splunk-appinspect inspect $(ls /tmp/workspace/build/splunkbase/*) --mode test --data-format junitxml --output-file test-results/appinspect-mode-test.xml
-    - store_artifacts:
-        path: test-results
-        destination: test-results
+  test_appinspect: # defines a parameterized job
+    description: Create the Splunk Packages and run appinspect
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - run:
+          name: Install
+          command: |
+            python -m venv ~/.venv
+            source ~/.venv/bin/activate
+            pip install https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: inspect
+          command: |
+            source ~/.venv/bin/activate
+            mkdir test-results
+            splunk-appinspect inspect $(ls /tmp/workspace/build/splunkbase/*) --mode test --data-format junitxml --output-file test-results/appinspect-mode-test.xml
+      - store_artifacts:
+          path: test-results
+          destination: test-results
 
 workflows:
   build:
