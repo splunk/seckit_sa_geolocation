@@ -1,7 +1,7 @@
 version: 2.1
-# orbs:
-#   docker: circleci/docker@0.5.20
-#   go: circleci/go@0.2.0
+orbs:
+  #   docker: circleci/docker@0.5.20
+  go: circleci/go@0.2.0
 #   snyk: snyk/snyk@0.0.8
 #   versioning: kollex/versioning@1.0.0
 #   semver-orb: tv2norge/semver-orb@0.0.1
