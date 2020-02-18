@@ -5,6 +5,36 @@ version: 2.1
 #   snyk: snyk/snyk@0.0.8
 #   versioning: kollex/versioning@1.0.0
 #   semver-orb: tv2norge/semver-orb@0.0.1
+test: &test
+  steps:
+    - checkout
+    - setup_remote_docker:
+        docker_layer_caching: true
+    - run:
+        name: Setup for testing
+        command: |
+          pip install -r tests/requirements.txt
+          mkdir test-results
+    - semver-orb/export-tag
+    - run:
+        name: test
+        command: |
+          docker-compose -f tests/docker-compose-ci.yml build
+          docker-compose -f tests/docker-compose-ci.yml up --abort-on-container-exit
+        no_output_timeout: 1h
+    - run:
+        name: collect results
+        when: always
+        command: |
+          docker container create --name dummy \
+                              -v tests_results:/work/test-results \
+                              registry.access.redhat.com/ubi7/ubi
+          docker cp dummy:/work/test-results/test.xml test-results/
+    - store_artifacts:
+        path: test-results
+        destination: test-results
+    - store_test_results:
+        path: test-results
 
 jobs:
   package: # defines a parameterized job
@@ -86,6 +116,24 @@ jobs:
           destination: test-results
       - store_test_results:
           path: test-results
+  test-splunk-8-0:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SPLUNK: "8.0"
+    <<: *test
+  test-splunk-7-3:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SPLUNK: "7.3"
+    <<: *test
+  test-splunk-7-2:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SPLUNK: "7-2"
+    <<: *test
 
 workflows:
   build:
@@ -94,37 +142,9 @@ workflows:
       - test_appinspect:
           requires:
             - package
-# test: &test
-#   steps:
-#     - checkout
-#     - setup_remote_docker:
-#         docker_layer_caching: true
-#     - run:
-#         name: Setup for testing
-#         command: |
-#           pip install -r tests/requirements.txt
-#           mkdir test-results
-#     - semver-orb/export-tag
-#     - run:
-#         name: test
-#         command: |
-#           docker-compose -f tests/docker-compose-ci.yml build
-#           docker-compose -f tests/docker-compose-ci.yml up --abort-on-container-exit
-#         no_output_timeout: 1h
-#     - run:
-#         name: collect results
-#         when: always
-#         command: |
-#           docker container create --name dummy \
-#                               -v tests_results:/work/test-results \
-#                               registry.access.redhat.com/ubi7/ubi
-#           docker cp dummy:/work/test-results/test.xml test-results/
-#     - store_artifacts:
-#         path: test-results
-#         destination: test-results
-#     - store_test_results:
-#         path: test-results
-
+      - test-splunk-8-0
+      - test-splunk-7-3
+      - test-splunk-7-2
 # publish: &publish
 #   steps:
 #     - setup_remote_docker:
