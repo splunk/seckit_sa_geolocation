@@ -1,10 +1,11 @@
 version: 2.1
-# orbs:
-#   docker: circleci/docker@0.5.20
-#   go: circleci/go@0.2.0
+orbs:
+  #   docker: circleci/docker@0.5.20
+  go: circleci/go@0.2.0
 #   snyk: snyk/snyk@0.0.8
 #   versioning: kollex/versioning@1.0.0
 #   semver-orb: tv2norge/semver-orb@0.0.1
+
 test: &test
   steps:
     - checkout
@@ -45,6 +46,18 @@ tag: &tag
         name: TAG
         command: |
           ./semtag ${SEMTAG}
+release-beta-candidate:
+  - checkout
+  - add_ssh_keys:
+      fingerprints:
+        - "73:9c:f8:91:b0:cc:4a:d5:17:af:ce:fc:61:69:ab:92"
+  - checkout
+  - run:
+      name: TAG
+      command: |
+        git merge master
+        git checkout master
+        git merge development
 jobs:
   package: # defines a parameterized job
     description: Create the Splunk Packages and run appinspect
@@ -67,7 +80,8 @@ jobs:
           command: |
             source ~/.venv/bin/activate
             VERSION=$(./semtag getcurrent)
-            VERSION_SPLUNK=$(echo $VERSION | sed 's/\-[^+]*+/B/g' | sed 's/v//')
+            VERSION_SPLUNK=$(python ./splver.py ${VERSION})
+            echo $VERSION_SPLUNK = $VERSION
             VERSION_PACKAGE=$(echo $VERSION | sed 's/\-[^+]*+/-B/g' | sed 's/v//')
             VERSION_DOCKER_M=$(echo  $VERSION | sed -n 's/v\([0-9]\).*/\1/p')
             VERSION_DOCKER_MM=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\).*/\1/p')
@@ -89,12 +103,9 @@ jobs:
           root: /home/circleci/project
           paths:
             - build/package/splunkbase
-      - store_artifacts:
-          path: build/source/app.manifest
-          destination: build-source
-      - store_artifacts:
-          path: build/source/default/app.conf
-          destination: build-source
+      # - store_artifacts:
+      #     path: build/source
+      #     destination: build-source
       - store_artifacts:
           path: build/package
           destination: build-package
@@ -180,6 +191,26 @@ jobs:
       SEMTAG: "final -s patch"
     <<: *tag
 
+  publish:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - go/install
+      - run:
+          name: "Publish edge on GitHub"
+          command: |
+            PATH=$PATH:/usr/local/go/bin
+            go get -v -u github.com/tcnksm/ghr
+            if [ -n "${CIRCLE_TAG}" ]; then VERSION=${CIRCLE_TAG}; else VERSION="${DOCKER_TAG}"; fi
+            PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
+            [ "$(./semtag getfinal)" != "${CIRCLE_TAG}" ] && ISPRE="-prerelease" || ISPRE=""
+            $HOME/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} -delete ${VERSION} $PACKAGE
+
 workflows:
   build:
     jobs:
@@ -210,6 +241,8 @@ workflows:
             branches:
               only: develop
       - approval-tag-beta:
+          requires:
+            - tag-alpha
           type: approval
           filters:
             branches:
@@ -221,7 +254,6 @@ workflows:
           filters:
             branches:
               only: master
-
       - approval-tag-final-major:
           type: approval
           requires:
@@ -229,7 +261,6 @@ workflows:
       - tag-final-major:
           requires:
             - approval-tag-final-major
-
       - approval-tag-final-minor:
           type: approval
           requires:
@@ -237,7 +268,6 @@ workflows:
       - tag-final-minor:
           requires:
             - approval-tag-final-minor
-
       - approval-tag-final-patch:
           type: approval
           requires:
@@ -245,6 +275,22 @@ workflows:
       - tag-final-patch:
           requires:
             - approval-tag-final-patch
+  publish:
+    jobs:
+      - package:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d*\.\d*\.\d*.*$/
+      - publish:
+          requires:
+            - package
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d*\.\d*\.\d*.*$/
 # publish: &publish
 #   steps:
 #     - setup_remote_docker:
