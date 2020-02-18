@@ -57,7 +57,7 @@ jobs:
           paths:
             - package/splunkbase/*
 
-package: # defines a parameterized job
+test_appinspect: # defines a parameterized job
   description: Create the Splunk Packages and run appinspect
   docker:
     - image: circleci/python:3.7
@@ -72,7 +72,7 @@ package: # defines a parameterized job
     - attach_workspace:
         at: /tmp/workspace
     - run:
-        name: version and package
+        name: inspect
         command: |
           source ~/.venv/bin/activate
           mkdir test-results
@@ -85,6 +85,9 @@ workflows:
   build:
     jobs:
       - package
+      - test_appinspect:
+          requires:
+            - package
 # test: &test
 #   steps:
 #     - checkout
