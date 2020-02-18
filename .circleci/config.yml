@@ -34,7 +34,17 @@ test: &test
         destination: test-results
     - store_test_results:
         path: test-results
-
+tag: &tag
+  steps:
+    - checkout
+    - add_ssh_keys:
+        fingerprints:
+          - "73:9c:f8:91:b0:cc:4a:d5:17:af:ce:fc:61:69:ab:92"
+    - checkout
+    - run:
+        name: TAG
+        command: |
+          ./semtag ${SEMTAG}
 jobs:
   package: # defines a parameterized job
     description: Create the Splunk Packages and run appinspect
@@ -133,18 +143,12 @@ jobs:
     environment:
       SPLUNK: "7-2"
     <<: *test
-  tag-beta:
+  tag-alpha:
     docker:
       - image: circleci/python:3.7
-    steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "73:9c:f8:91:b0:cc:4a:d5:17:af:ce:fc:61:69:ab:92"
-      - checkout
-      - run:
-          name: inspect
-          command: |
-            ./semtag alpha
+    environment:
+      SEMTAG: "alpha"
+    <<: *tag
 
 workflows:
   build:
@@ -184,7 +188,7 @@ workflows:
       - tag-beta:
           filters:
             branches:
-              only: /.*/
+              only: develop
             tags:
               ignore: /^v[0-9]+(\.[0-9]+)*$/
 # publish: &publish
