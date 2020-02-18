@@ -23,7 +23,7 @@
     },
     "commonInformationModels": null,
     "license": {
-      "name": null,
+      "name": "license-eula.txt",
       "text": null,
       "uri": null
     },
@@ -33,7 +33,7 @@
       "uri": null
     },
     "releaseNotes": {
-      "name": null,
+      "name": "README.md",
       "text": null,
       "uri": null
     }
