@@ -75,7 +75,7 @@ jobs:
           name: inspect
           command: |
             source ~/.venv/bin/activate
-            mkdir test-results
+            mkdir test-results || true
             splunk-appinspect inspect $(ls /tmp/workspace/build/splunkbase/*) --mode test --data-format junitxml --output-file test-results/appinspect-mode-test.xml
       - store_artifacts:
           path: test-results
