@@ -84,6 +84,8 @@ jobs:
       - store_artifacts:
           path: test-results
           destination: test-results
+      - store_test_results:
+          path: test-results
 
 workflows:
   build:
