@@ -46,7 +46,7 @@ tag: &tag
         name: TAG
         command: |
           ./semtag ${SEMTAG}
-release-beta-candidate:
+merge-beta-to-master:
   - checkout
   - add_ssh_keys:
       fingerprints:
@@ -250,6 +250,19 @@ workflows:
       - tag-beta:
           requires:
             - approval-tag-beta
+      - approval-merge-beta-to-master:
+          requires:
+            - tag-beta
+          type: approval
+          filters:
+            branches:
+              only: develop
+      - merge-beta-to-master:
+          requires:
+            - approval-merge-beta-to-master
+          filters:
+            branches:
+              only: develop
       - tag-candidate:
           filters:
             branches:
