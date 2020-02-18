@@ -161,6 +161,25 @@ jobs:
     environment:
       SEMTAG: "candidate"
     <<: *tag
+  tag-final-major:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SEMTAG: "final -s major"
+    <<: *tag
+  tag-final-minor:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SEMTAG: "final -s minor"
+    <<: *tag
+  tag-final-patch:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      SEMTAG: "final -s patch"
+    <<: *tag
+
 workflows:
   build:
     jobs:
@@ -202,10 +221,30 @@ workflows:
           filters:
             branches:
               only: master
-      - approval-tag-final:
+
+      - approval-tag-final-major:
           type: approval
           requires:
             - tag-candidate
+      - tag-final-major:
+          requires:
+            - approval-tag-final-major
+
+      - approval-tag-final-minor:
+          type: approval
+          requires:
+            - tag-candidate
+      - tag-final-minor:
+          requires:
+            - approval-tag-final-minor
+
+      - approval-tag-final-patch:
+          type: approval
+          requires:
+            - tag-candidate
+      - tag-final-patch:
+          requires:
+            - approval-tag-final-patch
 # publish: &publish
 #   steps:
 #     - setup_remote_docker:
