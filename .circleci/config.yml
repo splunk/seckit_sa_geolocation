@@ -190,10 +190,10 @@ workflows:
           filters:
             branches:
               only: develop
-      # - tag-beta:
-      #     filters:
-      #       branches:
-      #         only: develop
+      - tag-beta:
+          filters:
+            branches:
+              only: developx
       - tag-candidate:
           filters:
             branches:
