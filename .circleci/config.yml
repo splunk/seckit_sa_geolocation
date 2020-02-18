@@ -55,7 +55,7 @@ jobs:
       - persist_to_workspace:
           root: build
           paths:
-            - splunkbase/*
+            - build/package/splunkbase/*
 
   test_appinspect: # defines a parameterized job
     description: Create the Splunk Packages and run appinspect
