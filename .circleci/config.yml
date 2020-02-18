@@ -46,16 +46,19 @@ jobs:
             mkdir -p build/package/deployment
             slim package -o build/package/splunkbase $BUILD_DIR 
             ls build/package/splunkbase
-      - store_artifacts:
-          path: build/source
-          destination: build-source
-      - store_artifacts:
-          path: build/package
-          destination: build-package
       - persist_to_workspace:
           root: build
           paths:
             - package/splunkbase
+      - store_artifacts:
+          path: build/source/app.manifest
+          destination: build-source
+      - store_artifacts:
+          path: build/source/default/app.conf
+          destination: build-source
+      - store_artifacts:
+          path: build/package
+          destination: build-package
 
   test_appinspect: # defines a parameterized job
     description: Create the Splunk Packages and run appinspect
