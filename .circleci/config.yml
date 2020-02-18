@@ -103,9 +103,9 @@ jobs:
           root: /home/circleci/project
           paths:
             - build/package/splunkbase
-      - store_artifacts:
-          path: build/source
-          destination: build-source
+      # - store_artifacts:
+      #     path: build/source
+      #     destination: build-source
       - store_artifacts:
           path: build/package
           destination: build-package
@@ -208,7 +208,8 @@ jobs:
             go get -v -u github.com/tcnksm/ghr
             if [ -n "${CIRCLE_TAG}" ]; then VERSION=${CIRCLE_TAG}; else VERSION="${DOCKER_TAG}"; fi
             PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
-            $HOME/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -prerelease -delete ${VERSION} $PACKAGE
+            [ "$(./semtag getfinal)" != "${CIRCLE_TAG}" ] && ISPRE="-prerelease" || ISPRE=""
+            $HOME/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} -delete ${VERSION} $PACKAGE
 
 workflows:
   build:
