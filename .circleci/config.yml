@@ -195,7 +195,7 @@ jobs:
             git merge master
             git checkout master
             git pull
-            git merge development
+            git merge develop
 
   publish:
     docker:
