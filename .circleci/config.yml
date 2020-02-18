@@ -285,6 +285,11 @@ workflows:
       - publish:
           requires:
             - package
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d*\.\d*\.\d*.*$/
 # publish: &publish
 #   steps:
 #     - setup_remote_docker:
