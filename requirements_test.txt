@@ -1,7 +1,3 @@
-{% comment %} scons
-scons-tool-loader
-scons-tool-archives
-https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz {% endcomment %}
 pytest
 pytest-runner
 requests
