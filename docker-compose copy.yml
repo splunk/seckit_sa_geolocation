@@ -7,27 +7,16 @@
 #You should have received a copy of the CC0 legalcode along with this
 #work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 version: "3.7"
-
 services:
-  test:
-    build: .
-    links:
-      - splunk
-    volumes:
-      - results:/work/test-results
-
   splunk:
-    build: ..
-    hostname: splunk
+    build:
+      context: .
+      dockerfile: Dockerfile-splunk
+      args:
+        SPLUNK_APP: TA_fiction
     ports:
       - "8000"
-      - "8088"
       - "8089"
     environment:
-      - SPLUNK_HEC_TOKEN=70b6ae71-76b3-4c38-9597-0c5b37ad9630
       - SPLUNK_PASSWORD=Changed@11
       - SPLUNK_START_ARGS=--accept-license
-
-volumes:
-  results:
-    external: false

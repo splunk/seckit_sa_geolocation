@@ -1,0 +1,30 @@
+version: "3.7"
+
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile-tests
+    links:
+      - splunk
+    volumes:
+      - results:/work/test-results
+
+  splunk:
+    build:
+      context: .
+      dockerfile: Dockerfile-splunk
+      args:
+        - SPLUNK_APP=Splunk_TA_symantec-ep
+        - SPLUNK_VERSION=${SPLUNK_VERSION}
+    hostname: splunk
+    ports:
+      - "8000"
+      - "8089"
+    environment:
+      - SPLUNK_PASSWORD=Changed@11
+      - SPLUNK_START_ARGS=--accept-license
+
+volumes:
+  results:
+    external: false

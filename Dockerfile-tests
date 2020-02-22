@@ -1,0 +1,30 @@
+#Splunk Connect for Syslog (SC4S) by Splunk, Inc.
+#
+#To the extent possible under law, the person who associated CC0 with
+#Splunk Connect for Syslog (SC4S) has waived all copyright and related or neighboring rights
+#to Splunk Connect for Syslog (SC4S).
+#
+#You should have received a copy of the CC0 legalcode along with this
+#work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+FROM python:3.7
+
+RUN mkdir -p /work/tests
+RUN mkdir -p /work/test-results/functional
+
+COPY tests/entrypoint.sh /
+COPY tests/pytest-ci.ini /work/pytest.ini
+
+COPY tests/requirements.txt /tmp
+RUN pip3 install -r /tmp/requirements.txt
+
+COPY pytest-splunk-addon /tmp/pytest-splunk-addon
+RUN pip install -r /tmp/pytest-splunk-addon/requirements.txt
+RUN pip install /tmp/pytest-splunk-addon
+RUN rm -Rf /work/tests/pytest-splunk-addon
+
+RUN pip uninstall lovely-pytest-docker -y
+COPY tests /work/tests/
+COPY package /work/package/
+
+CMD /entrypoint.sh
+
