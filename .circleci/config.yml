@@ -167,6 +167,7 @@ orbs:
                 docker-compose -f docker-compose-ci.yml exec splunk sudo /opt/splunk/bin/splunk cmd btool check
           - run:
               name: Test
+              when: always
               command: |
                 docker-compose -f docker-compose-ci.yml up --abort-on-container-exit
               no_output_timeout: 1h
