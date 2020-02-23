@@ -1,3 +1,6 @@
 [submodule "deps/build/addonfactory_test_matrix_splunk"]
 	path = deps/build/addonfactory_test_matrix_splunk
 	url = https://github.com/splunk/addonfactory_test_matrix_splunk.git
+[submodule "deps/pypi/pytest-splunk-addon"]
+	path = deps/pypi/pytest-splunk-addon
+	url = git@github.com:splunk/pytest-splunk-addon.git
