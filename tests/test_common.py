@@ -8,7 +8,6 @@ import random
 import pytz
 
 from jinja2 import Environment, environment
-from tests.splunkutils import splunk_single
 
 env = Environment(extensions=['jinja2_time.TimeExtension'])
 
@@ -20,7 +19,5 @@ def test_isp(record_property, splunk_search_util):
     result = splunk_search_util.checkQueryCountIsGreaterThanZero(
         search, interval=1, retries=1
     )
-
-    
 
     assert result
