@@ -1,203 +1,285 @@
-#COPYRIGHT SPLUNK, Inc 2020
 version: 2.1
 orbs:
   go: circleci/go@0.2.0
+  splunk-app-package:
+    executors:
+      python27:
+        docker:
+          - image: circleci/python:2.7
+    commands:
+      package:
+        steps:
+          - run:
+              name: Install Slim
+              command: |
+                pip install virtualenv
+                mkdir ~/.venv
+                virtualenv ~/.venv
+                source ~/.venv/bin/activate
+                pip install semantic_version
+                pip install https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.0.tar.gz
+                pip install git+https://github.com/pixelb/crudini
+          - run:
+              name: version
+              command: |
+                source ~/.venv/bin/activate   
+                mkdir -p build
+                VERSION=$(./semtag getcurrent)
+                VERSION_SPLUNK=$(python ./splver.py ${VERSION})
+                VERSION_PACKAGE=$(echo $VERSION | sed 's/\-[^+]*+/-B/g' | sed 's/v//')
+                VERSION_DOCKER_M=$(echo  $VERSION | sed -n 's/v\([0-9]\).*/\1/p')
+                VERSION_DOCKER_MM=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\).*/\1/p')
+                VERSION_DOCKER_MMP=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
+                [ "$(./semtag getfinal)" != "${CIRCLE_TAG}" ] && ISPRE="-prerelease" || ISPRE=""
+                PACKAGE_ID=$(crudini --get package/default/app.conf id name)
 
-test: &test
-  steps:
-    - checkout
-    - setup_remote_docker:
-        docker_layer_caching: true
-    - run:
-        name: Setup for testing
-        command: |
-          pip install -r tests/requirements.txt
-          mkdir test-results
-    - run:
-        name: test
-        command: |
-          docker-compose -f tests/docker-compose-ci.yml build
-          docker-compose -f tests/docker-compose-ci.yml up --abort-on-container-exit
-        no_output_timeout: 1h
-    - run:
-        name: collect results
-        when: always
-        command: |
-          docker container create --name dummy \
-                              -v tests_results:/work/test-results \
-                              registry.access.redhat.com/ubi7/ubi
-          docker cp dummy:/work/test-results/test.xml test-results/
-    - store_artifacts:
-        path: test-results
-        destination: test-results
-    - store_test_results:
-        path: test-results
-tag: &tag
-  steps:
-    - checkout
-    - add_ssh_keys:
-        fingerprints:
-          - "73:9c:f8:91:b0:cc:4a:d5:17:af:ce:fc:61:69:ab:92"
-    - checkout
-    - run:
-        name: TAG
-        command: |
-          ./semtag ${SEMTAG}
+
+                echo export VERSION=${VERSION} >build/VERSION
+                echo export VERSION_SPLUNK=${VERSION_SPLUNK} >>build/VERSION
+                echo export VERSION_PACKAGE=${VERSION_PACKAGE} >>build/VERSION
+                echo export VERSION_DOCKER_M=${VERSION_DOCKER_M} >>build/VERSION
+                echo export VERSION_DOCKER_MM=${VERSION_DOCKER_MM} >>build/VERSION
+                echo export VERSION_DOCKER_MMP=${VERSION_DOCKER_MMP} >>build/VERSION
+                echo export PACKAGE_ID=${PACKAGE_ID} >>build/VERSION
+                echo export PACKAGE_BUILD=$(date +%s) >>build/VERSION
+                echo export ISPRE=${ISPRE} >>build/VERSION
+          - run:
+              name: version and package
+              command: |
+                source build/VERSION
+                source ~/.venv/bin/activate                
+                BUILD_DIR=build/source/$PACKAGE_ID
+                mkdir -p $BUILD_DIR
+                cp -r package/* $BUILD_DIR/
+                crudini --set $BUILD_DIR/default/app.conf launcher version $VERSION_SPLUNK
+                crudini --set $BUILD_DIR/default/app.conf id version $VERSION_SPLUNK
+                crudini --set $BUILD_DIR/default/app.conf install build ${PACKAGE_BUILD}
+                slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
+                cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
+                mkdir -p build/package/splunkbase
+                mkdir -p build/package/deployment
+                slim package -o build/package/splunkbase $BUILD_DIR 
+                ls build/package/splunkbase
+    jobs:
+      package:
+        executor: python27
+        steps:
+          - checkout
+          - package
+          - persist_to_workspace:
+              root: /home/circleci/project
+              paths:
+                - build/package/splunkbase
+                - build/VERSION
+          - store_artifacts:
+              path: build/package/splunkbase
+              destination: build-package-splunkbase
+          - store_artifacts:
+              path: build/VERSION
+              destination: build-version
+  splunk-app-inspect:
+    executors:
+      python37:
+        docker:
+          - image: circleci/python:3.7
+    commands:
+      inspect:
+        parameters:
+          options:
+            description: Inspect options
+            type: string
+            default: --mode test
+          label:
+            description: string to identify test options in file name of output
+            type: string
+            default: test
+        steps:
+          - run:
+              name: Install
+              command: |
+                python -m venv ~/.venv
+                source ~/.venv/bin/activate
+                pip install https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
+          - run:
+              name: inspect
+              command: |
+                source ~/.venv/bin/activate
+                mkdir test-results || true
+                PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
+                splunk-appinspect inspect <<parameters.options>> --data-format junitxml --output-file test-results/appinspect-mode-<<parameters.label>>.xml $PACKAGE
+                if grep failures=\"[1-9] test-results/appinspect-mode-<<parameters.label>>.xml; then exit 1; else exit 0; fi
+    jobs:
+      inspect:
+        parameters:
+          options:
+            description: Inspect options
+            type: string
+            default: --mode test
+          label:
+            description: string to identify test options in file name of output
+            type: string
+            default: test
+        executor: python37
+        steps:
+          - checkout
+          - attach_workspace:
+              at: /tmp/workspace
+          - inspect:
+              options: <<parameters.options>>
+              label: <<parameters.label>>
+          - store_artifacts:
+              path: test-results
+              destination: test-results
+          - store_test_results:
+              path: test-results
+  splunk-app-test:
+    executors:
+      python37:
+        docker:
+          - image: circleci/python:3.7
+    commands:
+      test_aio:
+        parameters:
+          splunk_version:
+            description: Image version
+            type: string
+            default: latest
+        steps:
+          - run:
+              name: Setup for testing
+              command: |
+                pip install -r tests/requirements.txt
+                pip install git+https://github.com/pixelb/crudini        
+                mkdir test-results
+          - run:
+              name: Splunk up
+              command: |
+                ls -l deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf
+                export SPLUNK_VERSION=$(crudini --get deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf "<<parameters.splunk_version>>" VERSION)
+                docker-compose -f docker-compose-ci.yml build
+                docker-compose -f docker-compose-ci.yml up -d splunk
+                sleep 90
+          - run:
+              name: Check btool
+              when: always
+              command: |
+                docker-compose -f docker-compose-ci.yml exec splunk sudo /opt/splunk/bin/splunk cmd btool check
+          - run:
+              name: Test
+              when: always
+              command: |
+                docker-compose -f docker-compose-ci.yml up --abort-on-container-exit
+              no_output_timeout: 1h
+          - run:
+              name: collect results
+              when: always
+              command: |
+                docker volume ls
+                docker container create --name dummy \
+                                    -v project_results:/work/test-results \
+                                    registry.access.redhat.com/ubi7/ubi
+                docker cp dummy:/work/test-results/test.xml test-results/
+    jobs:
+      test_aio:
+        parameters:
+          splunk_version:
+            description: Image version
+            type: string
+            default: latest
+        executor: python37
+        steps:
+          - checkout
+          - run: git submodule sync
+          - run: git submodule update --init
+          - setup_remote_docker:
+              docker_layer_caching: true
+          - test_aio:
+              splunk_version: <<parameters.splunk_version>>
+          - store_artifacts:
+              path: test-results
+              destination: test-results
+          - store_test_results:
+              path: test-results
+
+  splunk-release:
+    executors:
+      python37:
+        docker:
+          - image: circleci/python:3.7
+    commands:
+      tag:
+        parameters:
+          gh_user:
+            description: Git Hub username
+            type: string
+          gh_token:
+            description: Git Hub token
+            type: string
+          tag_level:
+            description: Tag level
+            type: string
+        steps:
+          - run:
+              name: TAG
+              command: |
+                git remote set-url origin https://<<parameters.gh_user>>:<<parameters.gh_token>>@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
+                ./semtag <<parameters.tag_level>>
+      merge-to-master:
+        parameters:
+          gh_user:
+            description: Git Hub username
+            type: string
+          gh_token:
+            description: Git Hub token
+            type: string
+        steps:
+          - run:
+              name: Merge
+              command: |
+                git remote set-url origin https://<<parameters.gh_user>>:<<parameters.gh_token>>@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
+                git config --global user.email "addonreleasesrv@splunk.com"
+                git config --global user.name "Add on release service"
+                git pull origin master
+                git merge master -m "Merge from master"
+                git checkout master
+                git merge develop
+                git push
+    jobs:
+      tag:
+        parameters:
+          gh_user:
+            description: Git Hub username
+            type: string
+          gh_token:
+            description: Git Hub token
+            type: string
+          tag_level:
+            description: Tag level
+            type: string
+        executor: python37
+        steps:
+          - checkout
+          - tag:
+              tag_level: <<parameters.tag_level>>
+              gh_user: <<parameters.gh_user>>
+              gh_token: <<parameters.gh_token>>
+      merge-to-master:
+        executor: python37
+        parameters:
+          gh_user:
+            description: Git Hub username
+            type: string
+          gh_token:
+            description: Git Hub token
+            type: string
+        steps:
+          - checkout
+          - merge-to-master:
+              gh_user: <<parameters.gh_user>>
+              gh_token: <<parameters.gh_token>>
 
 jobs:
-  package: # defines a parameterized job
-    description: Create the Splunk Packages and run appinspect
-    docker:
-      - image: circleci/python:2.7
-    steps:
-      - checkout
-      - run:
-          name: Install Slim
-          command: |
-            pip install virtualenv
-            mkdir ~/.venv
-            virtualenv ~/.venv
-            source ~/.venv/bin/activate
-            pip install semantic_version
-            pip install https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.0.tar.gz
-            pip install git+https://github.com/pixelb/crudini
-      - run:
-          name: version and package
-          command: |
-            source ~/.venv/bin/activate
-            VERSION=$(./semtag getcurrent)
-            VERSION_SPLUNK=$(python ./splver.py ${VERSION})
-            echo $VERSION_SPLUNK = $VERSION
-            VERSION_PACKAGE=$(echo $VERSION | sed 's/\-[^+]*+/-B/g' | sed 's/v//')
-            VERSION_DOCKER_M=$(echo  $VERSION | sed -n 's/v\([0-9]\).*/\1/p')
-            VERSION_DOCKER_MM=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\).*/\1/p')
-            VERSION_DOCKER_MMP=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
-            PACKAGE_ID=$(crudini --get package/default/app.conf id name)
-            BUILD_DIR=build/source/$PACKAGE_ID
-            mkdir -p $BUILD_DIR
-            cp -r package/* $BUILD_DIR/
-            crudini --set $BUILD_DIR/default/app.conf launcher version $VERSION_SPLUNK
-            crudini --set $BUILD_DIR/default/app.conf id version $VERSION_SPLUNK
-            crudini --set $BUILD_DIR/default/app.conf install build $(date +%s)
-            slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
-            cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
-            mkdir -p build/package/splunkbase
-            mkdir -p build/package/deployment
-            slim package -o build/package/splunkbase $BUILD_DIR 
-            ls build/package/splunkbase
-      - persist_to_workspace:
-          root: /home/circleci/project
-          paths:
-            - build/package/splunkbase
-      # - store_artifacts:
-      #     path: build/source
-      #     destination: build-source
-      - store_artifacts:
-          path: build/package
-          destination: build-package
-
-  test_appinspect: # defines a parameterized job
-    description: Create the Splunk Packages and run appinspect
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - checkout
-      - run:
-          name: Install
-          command: |
-            python -m venv ~/.venv
-            source ~/.venv/bin/activate
-            pip install https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
-      - attach_workspace:
-          at: /tmp/workspace
-      - run:
-          name: inspect
-          command: |
-            source ~/.venv/bin/activate
-            mkdir test-results || true
-            PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
-            splunk-appinspect inspect  --mode test --data-format junitxml --output-file test-results/appinspect-mode-test.xml       $PACKAGE
-      - store_artifacts:
-          path: test-results
-          destination: test-results
-      - store_test_results:
-          path: test-results
-  test-splunk-8-0:
-    docker:
-      - image: circleci/python:3.7
-    environment:
-      SPLUNK: "8.0"
-    <<: *test
-  test-splunk-7-3:
-    docker:
-      - image: circleci/python:3.7
-    environment:
-      SPLUNK: "7.3"
-    <<: *test
-  test-splunk-7-2:
-    docker:
-      - image: circleci/python:3.7
-    environment:
-      SPLUNK: "7-2"
-    <<: *test
-  tag-alpha:
-    docker:
-      - image: circleci/python:3.7
-    environment:
-      SEMTAG: "alpha"
-    <<: *tag
-  tag-beta:
-    docker:
-      - image: circleci/python:3.7
-    environment:
-      SEMTAG: "beta"
-    <<: *tag
-  tag-candidate:
-    docker:
-      - image: circleci/python:3.7
-    environment:
-      SEMTAG: "candidate"
-    <<: *tag
-  tag-final-major:
-    docker:
-      - image: circleci/python:3.7
-    environment:
-      SEMTAG: "final -s major"
-    <<: *tag
-  tag-final-minor:
-    docker:
-      - image: circleci/python:3.7
-    environment:
-      SEMTAG: "final -s minor"
-    <<: *tag
-  tag-final-patch:
-    docker:
-      - image: circleci/python:3.7
-    environment:
-      SEMTAG: "final -s patch"
-    <<: *tag
-
-  merge-beta-to-master:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints:
-            - "73:9c:f8:91:b0:cc:4a:d5:17:af:ce:fc:61:69:ab:92"
-      - checkout
-      - run:
-          name: Merge
-          command: |
-            git config --global user.email "addonreleasesrv@splunk.com"
-            git config --global user.name "Add on release service"
-            git pull origin master
-            git merge master -m "Merge from master"
-            git checkout master
-            git merge develop
-            git push
-
-  publish:
+  publish-gh:
     docker:
       - image: circleci/python:3.7
     steps:
@@ -208,41 +290,85 @@ jobs:
       - checkout
       - go/install
       - run:
-          name: "Publish edge on GitHub"
+          name: "Publish on GitHub"
           command: |
             PATH=$PATH:/usr/local/go/bin
-            go get -v -u github.com/tcnksm/ghr
+            PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
+            source /tmp/workspace/build/VERSION
+            go get -v -u github.com/tcnksm/ghr            
+            $HOME/go/bin/ghr -t ${GH_PAT} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} -delete ${VERSION} $PACKAGE
+
+  publish-sbase:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - run:
+          name: Install utils
+          command: |
+            pip install git+https://github.com/pixelb/crudini
+      - run:
+          name: "Publish on Splunkbase"
+          command: |
+            source ./splunkbase
             if [ -n "${CIRCLE_TAG}" ]; then VERSION=${CIRCLE_TAG}; else VERSION="${DOCKER_TAG}"; fi
             PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
-            [ "$(./semtag getfinal)" != "${CIRCLE_TAG}" ] && ISPRE="-prerelease" || ISPRE=""
-            $HOME/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} -delete ${VERSION} $PACKAGE
+            PACKAGE_ID=$(crudini --get package/default/app.conf id name)
+            curl -u ${SPLUNKBASE_USERNAME} --request POST https://splunkbase.splunk.com/api/v1/app/${SPLUNKBASE_ID}/new_release/ -F "files[]=@${PACKAGE}" -F "filename=${PACKAGE_ID}.spl" -F "splunk_versions=${SPLUNKBASE_SPLUNK_VERSION}"
 
 workflows:
   build:
     jobs:
-      - package:
+      - splunk-app-package/package:
+          name: package
           filters:
             branches:
               only: /.*/
-      - test_appinspect:
+      - splunk-app-inspect/inspect:
+          name: splunk-app-inspect-badge
+          options: "--mode test"
+          label: "badge"
           filters:
             branches:
               only: /.*/
           requires:
             - package
-      - test-splunk-8-0:
+      - splunk-app-inspect/inspect:
+          name: splunk-app-inspect-cloud
+          options: "--mode precert --included-tags cloud"
+          label: "cloud"
           filters:
             branches:
               only: /.*/
-      - test-splunk-7-3:
+          requires:
+            - package
+      - splunk-app-test/test_aio:
+          name: test-splunk-8-0
+          splunk_version: "8.0"
           filters:
             branches:
               only: /.*/
-      - test-splunk-7-2:
+      - splunk-app-test/test_aio:
+          name: test-splunk-7-3
+          splunk_version: "7.3"
           filters:
             branches:
               only: /.*/
-      - tag-alpha:
+      - splunk-app-test/test_aio:
+          name: test-splunk-7-2
+          splunk_version: "7.2"
+          filters:
+            branches:
+              only: /.*/
+      - splunk-release/tag:
+          name: tag-alpha
+          tag_level: alpha
+          gh_user: ${GH_USER}
+          gh_token: ${GH_PAT}
           filters:
             branches:
               only: develop
@@ -253,7 +379,11 @@ workflows:
           filters:
             branches:
               only: develop
-      - tag-beta:
+      - splunk-release/tag:
+          name: tag-beta
+          tag_level: beta
+          gh_user: ${GH_USER}
+          gh_token: ${GH_PAT}
           requires:
             - approval-tag-beta
       - approval-merge-beta-to-master:
@@ -263,13 +393,20 @@ workflows:
           filters:
             branches:
               only: develop
-      - merge-beta-to-master:
+      - splunk-release/merge-to-master:
+          name: merge-beta-to-master
+          gh_user: ${GH_USER}
+          gh_token: ${GH_PAT}
           requires:
             - approval-merge-beta-to-master
           filters:
             branches:
               only: develop
-      - tag-candidate:
+      - splunk-release/tag:
+          name: tag-candidate
+          tag_level: candidate
+          gh_user: ${GH_USER}
+          gh_token: ${GH_PAT}
           filters:
             branches:
               only: master
@@ -277,32 +414,45 @@ workflows:
           type: approval
           requires:
             - tag-candidate
-      - tag-final-major:
+      - splunk-release/tag:
+          name: tag-final-major
+          tag_level: final -s major
+          gh_user: ${GH_USER}
+          gh_token: ${GH_PAT}
           requires:
             - approval-tag-final-major
       - approval-tag-final-minor:
           type: approval
           requires:
             - tag-candidate
-      - tag-final-minor:
+      - splunk-release/tag:
+          name: tag-final-minor
+          tag_level: final -s minor
+          gh_user: ${GH_USER}
+          gh_token: ${GH_PAT}
           requires:
             - approval-tag-final-minor
       - approval-tag-final-patch:
           type: approval
           requires:
             - tag-candidate
-      - tag-final-patch:
+      - splunk-release/tag:
+          name: tag-final-patch
+          tag_level: final -s patch
+          gh_user: ${GH_USER}
+          gh_token: ${GH_PAT}
           requires:
             - approval-tag-final-patch
   publish:
     jobs:
-      - package:
+      - splunk-app-package/package:
+          name: package
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^v\d*\.\d*\.\d*.*$/
-      - publish:
+      - publish-gh:
           requires:
             - package
           filters:
