@@ -218,5 +218,6 @@ tests/model-conformance
 tests/functional
 
 !deps/build
+!package/appserver/static/js/build
 .csms
 .venvcsms
