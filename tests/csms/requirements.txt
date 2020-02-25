@@ -1,0 +1,12 @@
+-i https://repo.splunk.com/artifactory/api/pypi/pypi-virtual/simple
+csms-sdk
+#pytest 
+#pytest-xdist
+# #pyyaml
+# splunk-mule
+# splunk-machinetruck
+# #mock
+# #pytest-pep8
+# #pytest-pylint
+# #pytest-cov==2.6.0
+urllib3

@@ -218,3 +218,5 @@ tests/model-conformance
 tests/functional
 
 !deps/build
+.csms
+.venvcsms
