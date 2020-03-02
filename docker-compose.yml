@@ -15,19 +15,8 @@ services:
       args:
         SPLUNK_APP: SecKit_SA_geolocation
     ports:
-      - "8000:8000"
+      - "8000"
       - "8089"
     environment:
       - SPLUNK_PASSWORD=Changed@11
       - SPLUNK_START_ARGS=--accept-license
-    volumes:
-      - splunk-var:/opt/splunk/var
-
-
-volumes:
-  splunk-var:
-    external: false
-  aob-var:
-    external: false
-  aob-etc:
-      external: false
