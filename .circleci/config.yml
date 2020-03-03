@@ -1,3 +1,5 @@
+#COPYRIGHT SPLUNK, Inc 2020
+
 version: 2.1
 orbs:
   go: circleci/go@0.2.0
@@ -157,18 +159,29 @@ orbs:
                 ls -l deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf
                 export SPLUNK_VERSION=$(crudini --get deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf "<<parameters.splunk_version>>" VERSION)
                 docker-compose -f docker-compose-ci.yml build
-                docker-compose -f docker-compose-ci.yml up -d splunk
-                sleep 90
+                docker-compose -f docker-compose-ci.yml up -d splunk                
+                while [ $? -ne 0 ]; do docker logs c14f4fadf39a | grep "Ansible playbook complete" ; done
+                sleep 30
+          - run:
+              name: Run diag
+              when: always
+              command: |
+                mkdir /tmp/diag
+                diag=$(docker-compose -f docker-compose-ci.yml exec splunk sudo -u splunk /opt/splunk/bin/splunk diag | grep "Splunk diagnosis file created" | sed -n 's/.* \(\/.*\.gz\)/\1/p') 
+                docker-compose -f docker-compose-ci.yml exec splunk sudo chmod +r ${diag//[$'\t\r\n']}
+                docker cp project_splunk_1:${diag//[$'\t\r\n']} /tmp/diag
           - run:
               name: Check btool
               when: always
               command: |
                 docker-compose -f docker-compose-ci.yml exec splunk sudo /opt/splunk/bin/splunk cmd btool check
+                docker-compose -f docker-compose-ci.yml up -d splunk
+                sleep 30
           - run:
               name: Test
               when: always
               command: |
-                docker-compose -f docker-compose-ci.yml up --abort-on-container-exit
+                docker-compose -f docker-compose-ci.yml up  --abort-on-container-exit test
               no_output_timeout: 1h
           - run:
               name: collect results
@@ -195,6 +208,9 @@ orbs:
               docker_layer_caching: true
           - test_aio:
               splunk_version: <<parameters.splunk_version>>
+          - store_artifacts:
+              path: /tmp/diag
+              destination: test-diag
           - store_artifacts:
               path: test-results
               destination: test-results

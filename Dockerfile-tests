@@ -20,6 +20,7 @@ RUN pip3 install -r /tmp/requirements.txt
 COPY deps/pypi/pytest-splunk-addon /tmp/pytest-splunk-addon
 RUN pip install -r /tmp/pytest-splunk-addon/requirements.txt
 RUN pip install /tmp/pytest-splunk-addon
+RUN pip install pytest-xdist
 RUN rm -Rf /work/tests/pytest-splunk-addon
 
 RUN pip uninstall lovely-pytest-docker -y
