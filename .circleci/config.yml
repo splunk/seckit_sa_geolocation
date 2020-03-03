@@ -331,10 +331,11 @@ jobs:
           name: "Publish on Splunkbase"
           command: |
             source ./splunkbase
-            if [ -n "${CIRCLE_TAG}" ]; then VERSION=${CIRCLE_TAG}; else VERSION="${DOCKER_TAG}"; fi
+            source /tmp/workspace/build/VERSION
             PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
             PACKAGE_ID=$(crudini --get package/default/app.conf id name)
-            curl -u ${SPLUNKBASE_USERNAME} --request POST https://splunkbase.splunk.com/api/v1/app/${SPLUNKBASE_ID}/new_release/ -F "files[]=@${PACKAGE}" -F "filename=${PACKAGE_ID}.spl" -F "splunk_versions=${SPLUNKBASE_SPLUNK_VERSION}"
+            [ "${ISPRE}" == "-prerelease" ] && SPLUNKBASE_VIS="false" || SPLUNKBASE_VIS="true"                
+            curl -u ${SPLUNKBASE_USERNAME}:${SPLUNKBASE_PASSWORD}  --request POST https://splunkbase.splunk.com/api/v1/app/${SPLUNKBASE_ID}/new_release/ -F "files[]=@${PACKAGE}" -F "filename=${PACKAGE_ID}.spl" -F "splunk_versions=${SPLUNKBASE_SPLUNK_VERSION}" -F "visibility=${SPLUNKBASE_VIS}"
 
 workflows:
   build:
@@ -469,6 +470,14 @@ workflows:
             tags:
               only: /^v\d*\.\d*\.\d*.*$/
       - publish-gh:
+          requires:
+            - package
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d*\.\d*\.\d*.*$/
+      - publish-sbase:
           requires:
             - package
           filters:
