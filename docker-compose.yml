@@ -13,7 +13,7 @@ services:
       context: .
       dockerfile: Dockerfile-splunk
       args:
-        SPLUNK_APP: SecKit_SA_geolocation
+        SPLUNK_APP=SecKit_SA_geolocation
     ports:
       - "8000"
       - "8089"
