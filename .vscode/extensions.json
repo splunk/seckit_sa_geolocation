@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "rogalmic.bash-debug",
+        "ms-azuretools.vscode-docker",
+        "cameron.vscode-pytest",
+        "ms-python.python",
+        "donjayamanne.python-extension-pack",
+    ]
+}
