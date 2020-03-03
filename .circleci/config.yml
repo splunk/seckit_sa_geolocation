@@ -330,7 +330,7 @@ jobs:
       - run:
           name: "Publish on Splunkbase"
           command: |
-            source ./splunkbase
+            source .splunkbase
             source /tmp/workspace/build/VERSION
             PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
             PACKAGE_ID=$(crudini --get package/default/app.conf id name)
