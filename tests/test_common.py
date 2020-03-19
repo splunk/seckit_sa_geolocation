@@ -21,3 +21,16 @@ def test_isp(record_property, splunk_search_util):
     )
 
     assert result
+
+
+def test_update(record_property, splunk_search_util, seckit_input):
+
+
+
+    search = 'search index=_internal source="/opt/splunk/var/log/splunk/splunkd.log" "Acquired lock file lock"'
+
+    result = splunk_search_util.checkQueryCountIsGreaterThanZero(
+        search, interval=10, retries=18
+    )
+
+    assert result
