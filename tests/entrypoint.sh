@@ -1,4 +1,3 @@
 #!/bin/sh
-
-cd /work
-pytest $@
+cd /home/circleci
+exec pytest $@
