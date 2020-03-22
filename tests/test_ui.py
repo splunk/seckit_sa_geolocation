@@ -9,6 +9,7 @@ from applitools.common import DeviceName
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from time import sleep
+from applitools.common import logger, StdoutLogger
 
 
 @pytest.fixture(scope="session")
@@ -45,8 +46,8 @@ def runner_setup():
     """
     One test runner for all tests. Print test results in the end of execution.
     """
-    runner = ClassicRunner()
-    #runner = VisualGridRunner()
+    # runner = ClassicRunner()
+    runner = VisualGridRunner(1)
     yield runner
     all_test_results = runner.get_all_test_results()
     print(all_test_results)
@@ -67,13 +68,13 @@ def eyes_setup(runner, batch_info):
     eyes.configure.batch = batch_info
     yield eyes
     # If the test was aborted before eyes.close was called, ends the test as aborted.
-    #eyes.close(False)
-    #eyes.abort_if_not_closed()
+    # eyes.close(False)
+    # eyes.abort_if_not_closed()
 
 
 # def test_navigate_app_sidebar(eyes, driver, splunk_web_uri):
 @pytest.mark.nondestructive
-def test_navigate_app_sidebar(driver, eyes, splunk_web_uri):
+def test_ui_navigate_app_sidebar(driver, eyes, splunk_web_uri):
     # Start the test and set the browser's viewport size to 800x600.
     eyes.open(driver, "SecKit_Geolocation", "App Nav by sidebar")
     driver.get(f"{splunk_web_uri}en-US/app/launcher/home")
@@ -86,13 +87,16 @@ def test_navigate_app_sidebar(driver, eyes, splunk_web_uri):
     driver.find_element(By.XPATH, "//div[2]/a/div[2]").click()
 
     eyes.check("App Nav by sidebar success", Target.window().fully())
-    #eyes.close(False)
+    # eyes.close(False)
 
     eyes.close()
 
+
 @pytest.mark.nondestructive
-def test_navigate_app_menu(driver, splunk_web_uri,eyes):
+def test_ui_navigate_app_menu(driver, splunk_web_uri, eyes):
     # Start the test and set the browser's viewport size to 800x600.
+    logger.set_logger(StdoutLogger())
+
     eyes.open(driver, "SecKit_Geolocation", "App Nav by menu")
     driver.get(f"{splunk_web_uri}en-US/app/search/search")
     eyes.check("App Nav by menu start at search", Target.window().fully())
@@ -102,5 +106,51 @@ def test_navigate_app_menu(driver, splunk_web_uri,eyes):
         By.XPATH, "//span[contains(.,'SecKit Geolocation with Maxmind')]"
     ).click()
     eyes.check("App Nav by menu success", Target.window().fully())
-    #eyes.close(False)
+    # eyes.close(False)
+    eyes.close()
+
+
+def test_ui_navigate_setup_input(driver, splunk_web_uri, eyes):
+
+    logger.set_logger(StdoutLogger())
+    eyes.open(driver, "SecKit_Geolocation", "App Setup")
+    driver.get(f"{splunk_web_uri}en-US/app/SecKit_SA_geolocation/configuration")
+    eyes.check("App Nav Direct Configuration", Target.window().fully())
+
+    driver.set_window_size(1440, 877)
+    driver.find_element(By.LINK_TEXT, "Action").click()
+    element = driver.find_element(By.LINK_TEXT, "Edit")
+    actions = ActionChains(driver)
+    actions.move_to_element(element).perform()
+    driver.find_element(By.LINK_TEXT, "Edit").click()
+    #    element = driver.find_element(By.CSS_SELECTOR, "body")
+    #    actions = ActionChains(driver)
+    #    actions.move_to_element(element, 0, 0).perform()
+
+    eyes.check("App Edit Account pre-fill", Target.window().fully())
+    driver.find_element(By.ID, "account-username").click()
+    driver.find_element(By.ID, "account-username").send_keys("123451")
+    driver.find_element(By.ID, "account-password").click()
+    driver.find_element(By.ID, "account-password").send_keys("mypassword")
+    eyes.check("App Edit Account pre-submit", Target.window().fully())
+    driver.find_element(By.CSS_SELECTOR, ".submit-dialog").click()
+
+    eyes.check("App Edit Account Complete", Target.window().fully())
+
+    driver.get(f"{splunk_web_uri}en-US/app/SecKit_SA_geolocation/inputs")
+    eyes.check("App Nav Direct Inputs", Target.window().fully())
+
+    # driver.find_element(By.CSS_SELECTOR, ".app:nth-child(2) .app-name").click()
+    driver.find_element(By.LINK_TEXT, "Inputs").click()
+    driver.find_element(By.LINK_TEXT, "Action").click()
+    element = driver.find_element(By.LINK_TEXT, "Action")
+    actions = ActionChains(driver)
+    actions.move_to_element(element).perform()
+    #    element = driver.find_element(By.CSS_SELECTOR, "body")
+    #    actions = ActionChains(driver)
+    #    actions.move_to_element(element, 0, 0).perform()
+    driver.find_element(By.LINK_TEXT, "Enable").click()
+
+    eyes.check("App Nav Direct Inputs Enabled", Target.window().fully())
+
     eyes.close()
