@@ -6,31 +6,41 @@ from applitools.selenium import Eyes, Target, BatchInfo, ClassicRunner
 from webdriver_manager.chrome import ChromeDriverManager
 from applitools.common.selenium import BrowserType
 from applitools.common import DeviceName
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+from time import sleep
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def batch_info():
     """
     Use one BatchInfo for all tests inside module
     """
-    return BatchInfo("Some general Test cases name")
+    return BatchInfo("SecKit_Geolocation")
 
 
-@pytest.fixture(name="driver", scope="function")
-def driver_setup():
+@pytest.fixture(name="driver", scope="session")
+def driver_setup(splunk_web_uri):
     """
     New browser instance per test and quite.
     """
     driver = webdriver.Chrome(ChromeDriverManager().install())
-    driver.implicitly_wait(45)
 
-    
+    driver.get(f"{splunk_web_uri}en-US/account/logout")
+
+    driver.find_element(By.ID, "username").send_keys("admin")
+    driver.find_element(By.ID, "password").send_keys("Changed@11")
+    sleep(5)
+    driver.find_element(By.XPATH, "//input[@value='Sign In']").click()
+
+    driver.implicitly_wait(45)
+    driver.maximize_window()
     yield driver
     # Close the browser.
     driver.quit()
 
 
-@pytest.fixture(name="runner", scope="module")
+@pytest.fixture(name="runner", scope="session")
 def runner_setup():
     """
     One test runner for all tests. Print test results in the end of execution.
@@ -41,7 +51,7 @@ def runner_setup():
     print(all_test_results)
 
 
-@pytest.fixture(name="eyes", scope="function")
+@pytest.fixture(name="eyes", scope="session")
 def eyes_setup(runner, batch_info):
     """
     Basic Eyes setup. It'll abort test if wasn't closed properly.
@@ -56,61 +66,38 @@ def eyes_setup(runner, batch_info):
     eyes.configure.batch = batch_info
     yield eyes
     # If the test was aborted before eyes.close was called, ends the test as aborted.
-    eyes.close(False)
+    #eyes.close(False)
     eyes.abort_if_not_closed()
 
 
-def test_web_accessible(eyes, driver, splunk_web_uri):
+# def test_navigate_app_sidebar(eyes, driver, splunk_web_uri):
+@pytest.mark.nondestructive
+def test_navigate_app_sidebar(driver, eyes, splunk_web_uri):
     # Start the test and set the browser's viewport size to 800x600.
-    eyes.open(driver, "SecKit_Geolocation", "Web Accessible")
-    # Navigate the browser to the "hello world!" web-site.
-    driver.get(f"{splunk_web_uri}en-US/account/login")
-    driver.implicitly_wait(45)
-    # Visual checkpoint #1.
-    eyes.check("Login Window test", Target.window().fully())
+    eyes.open(driver, "SecKit_Geolocation", "App Nav by sidebar")
+    driver.get(f"{splunk_web_uri}en-US/app/launcher/home")
+    eyes.check("App Nav by sidebar start at launcher", Target.window().fully())
 
-    # End the test.
-    # eyes.close(False)
+    driver.find_element(By.CSS_SELECTOR, ".app:nth-child(2) .app-name").click()
+    element = driver.find_element(By.XPATH, "//div[2]/a/div[2]")
+    actions = ActionChains(driver)
+    actions.move_to_element(element).perform()
+    driver.find_element(By.XPATH, "//div[2]/a/div[2]").click()
+
+    eyes.check("App Nav by sidebar success", Target.window().fully())
+    eyes.close(False)
 
 
-def test_web_login_success(eyes, driver, splunk_web_uri):
+@pytest.mark.nondestructive
+def test_navigate_app_menu(driver, splunk_web_uri,eyes):
     # Start the test and set the browser's viewport size to 800x600.
-    eyes.open(driver, "SecKit_Geolocation", "Web Login")
-    # Navigate the browser to the "hello world!" web-site.
-    driver.get(f"{splunk_web_uri}en-US/account/login")
-    eyes.check("Login Window", Target.window().fully())
+    eyes.open(driver, "SecKit_Geolocation", "App Nav by menu")
+    driver.get(f"{splunk_web_uri}en-US/app/search/search")
+    eyes.check("App Nav by menu start at search", Target.window().fully())
 
-    driver.find_element_by_css_selector("[name=username]").send_keys("admin")
-    driver.find_element_by_css_selector("[name=password]").send_keys("Changed@11")
-    driver.find_element_by_css_selector("[name=password]").send_keys("${KEY_ENTER}")
-    eyes.check("Login Success", Target.window().fully())
-
-    # End the test.
-
-
-# eyes.close(False)
-# def test_navigate_app(self, splunk_web_uri, splunk_search_util):
-
-#     self.driver.get(f"{splunk_web_uri}en-US/app/launcher/home")
-
-#     self.driver.find_element(By.CSS_SELECTOR, ".app:nth-child(2) .app-name").click()
-#     element = self.driver.find_element(By.XPATH, "//div[2]/a/div[2]")
-#     actions = ActionChains(self.driver)
-#     actions.move_to_element(element).perform()
-#     self.driver.find_element(By.XPATH, "//div[2]/a/div[2]").click()
-
-#     self.eyes.check("Step - Nav via sidebar", Target.window().fully())
-
-# def test_navigate_menu(self, splunk_web_uri, splunk_search_util):
-
-#     self.driver.get(f"{splunk_web_uri}en-US/app/search/search")
-
-#     self.eyes.check("Step - Check Search App", Target.window().fully())
-#     self.driver.find_element(By.LINK_TEXT, "Search & Reporting").click()
-#     self.driver.find_element(
-#         By.XPATH, "//span[contains(.,'App: Search & Reporting')]"
-#     ).click()
-#     self.driver.find_element(By.XPATH, "//li[2]/a/span").click()
-
-#     self.eyes.check("Step - Nav via Menu", Target.window().fully())
-
+    driver.find_element(By.XPATH, "//div/div/a/span").click()
+    driver.find_element(
+        By.XPATH, "//span[contains(.,'SecKit Geolocation with Maxmind')]"
+    ).click()
+    eyes.check("App Nav by menu success", Target.window().fully())
+    eyes.close(False)
