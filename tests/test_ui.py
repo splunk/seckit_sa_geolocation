@@ -2,7 +2,7 @@ import os
 import pytest
 
 from selenium import webdriver
-from applitools.selenium import Eyes, Target, BatchInfo, ClassicRunner
+from applitools.selenium import BatchInfo, ClassicRunner, Eyes, Target, VisualGridRunner
 from webdriver_manager.chrome import ChromeDriverManager
 from applitools.common.selenium import BrowserType
 from applitools.common import DeviceName
@@ -46,12 +46,13 @@ def runner_setup():
     One test runner for all tests. Print test results in the end of execution.
     """
     runner = ClassicRunner()
+    #runner = VisualGridRunner()
     yield runner
     all_test_results = runner.get_all_test_results()
     print(all_test_results)
 
 
-@pytest.fixture(name="eyes", scope="session")
+@pytest.fixture(name="eyes", scope="function")
 def eyes_setup(runner, batch_info):
     """
     Basic Eyes setup. It'll abort test if wasn't closed properly.
@@ -67,7 +68,7 @@ def eyes_setup(runner, batch_info):
     yield eyes
     # If the test was aborted before eyes.close was called, ends the test as aborted.
     #eyes.close(False)
-    eyes.abort_if_not_closed()
+    #eyes.abort_if_not_closed()
 
 
 # def test_navigate_app_sidebar(eyes, driver, splunk_web_uri):
@@ -85,8 +86,9 @@ def test_navigate_app_sidebar(driver, eyes, splunk_web_uri):
     driver.find_element(By.XPATH, "//div[2]/a/div[2]").click()
 
     eyes.check("App Nav by sidebar success", Target.window().fully())
-    eyes.close(False)
+    #eyes.close(False)
 
+    eyes.close()
 
 @pytest.mark.nondestructive
 def test_navigate_app_menu(driver, splunk_web_uri,eyes):
@@ -100,4 +102,5 @@ def test_navigate_app_menu(driver, splunk_web_uri,eyes):
         By.XPATH, "//span[contains(.,'SecKit Geolocation with Maxmind')]"
     ).click()
     eyes.check("App Nav by menu success", Target.window().fully())
-    eyes.close(False)
+    #eyes.close(False)
+    eyes.close()
