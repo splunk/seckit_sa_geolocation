@@ -92,7 +92,7 @@ def test_ui_navigate_app_sidebar(driver, eyes, splunk_web_uri):
     eyes.check("App Nav by sidebar success", Target.window().fully())
     # eyes.close(False)
 
-    eyes.close_async()
+    eyes.close()
 
 
 @pytest.mark.nondestructive
@@ -109,7 +109,7 @@ def test_ui_navigate_app_menu(driver, splunk_web_uri, eyes):
     ).click()
     eyes.check("App Nav by menu success", Target.window().fully())
     # eyes.close(False)
-    eyes.close_async()
+    eyes.close()
 
 
 def test_ui_navigate_setup_input(driver, splunk_web_uri, eyes):
@@ -215,4 +215,4 @@ def test_ui_navigate_setup_input(driver, splunk_web_uri, eyes):
     driver.find_element(By.CSS_SELECTOR, ".submit-dialog").click()
     sleep(5)
     eyes.check("Configuration Account Deleted", Target.window().fully())
-    eyes.close_async()
+    eyes.close()
