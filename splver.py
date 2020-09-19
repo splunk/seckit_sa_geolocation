@@ -1,5 +1,9 @@
 # coding=utf8
-# the above tag defines encoding for this document and is for Python 2.x compatibility
+#
+# SPDX-FileCopyrightText: 2020 Splunk, Inc. <sales@splunk.com>
+# SPDX-License-Identifier: LicenseRef-Splunk-1-2020
+#
+#
 from __future__ import print_function
 import sys
 

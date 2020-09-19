@@ -1,0 +1,54 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Splunk Add On For Juniper
+Upstream-Contact: Splunk Inc. <support@splunk.com>
+Source: https://github.com/splunk/splunk-add-on-for-juniper
+
+
+Files: deps/*
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+
+Files: package/lookups/*
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+Files: package/static/*
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+Files: package/samples/*
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+Files: package/metadata/*
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+Files: package/app.manifest
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+Files: package/README.*
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+Files: tests/*
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+Files: .*
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+Files: Dockerfile*
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+Files: semtag
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
+
+Files: README.*
+Copyright: $YEAR $NAME <$CONTACT>
+License: LicenseRef-Splunk-1-2020
