@@ -1,4 +1,8 @@
-#COPYRIGHT SPLUNK, Inc 2020
+##
+## SPDX-FileCopyrightText: 2020 Splunk, Inc. <sales@splunk.com>
+## SPDX-License-Identifier: LicenseRef-Splunk-1-2020
+##
+##
 
 version: 2.1
 orbs:
@@ -18,7 +22,7 @@ orbs:
                 mkdir ~/.venv
                 virtualenv ~/.venv
                 source ~/.venv/bin/activate
-                pip install semantic_version
+                pip install semantic_version==2.5.0
                 pip install https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.0.tar.gz
                 pip install git+https://github.com/pixelb/crudini
           - run:
@@ -46,22 +50,55 @@ orbs:
                 echo export PACKAGE_BUILD=$(date +%s) >>build/VERSION
                 echo export ISPRE=${ISPRE} >>build/VERSION
           - run:
-              name: version and package
+              name: version
               command: |
                 source build/VERSION
                 source ~/.venv/bin/activate                
                 BUILD_DIR=build/source/$PACKAGE_ID
                 mkdir -p $BUILD_DIR
                 cp -r package/* $BUILD_DIR/
+                rm -rf $BUILD_DIR/samples
+                rm -rf $BUILD_DIR/default/eventgen.conf
                 crudini --set $BUILD_DIR/default/app.conf launcher version $VERSION_SPLUNK
                 crudini --set $BUILD_DIR/default/app.conf id version $VERSION_SPLUNK
                 crudini --set $BUILD_DIR/default/app.conf install build ${PACKAGE_BUILD}
+          - run:
+              name: license
+              command: |
+                source build/VERSION
+                source ~/.venv/bin/activate                
+                BUILD_DIR=build/source/$PACKAGE_ID
+                cp -r LICENSES $BUILD_DIR/
+                #In the future use reuse to produce spdx but we can't do that until we can run python3 in this phase
+          - run:
+              name: package
+              command: |
+                source build/VERSION
+                source ~/.venv/bin/activate                
+                BUILD_DIR=build/source/$PACKAGE_ID
                 slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
                 cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
                 mkdir -p build/package/splunkbase
                 mkdir -p build/package/deployment
                 slim package -o build/package/splunkbase $BUILD_DIR 
                 ls build/package/splunkbase
+          - run:
+              name: validate
+              command: |
+                source build/VERSION
+                source ~/.venv/bin/activate                
+                BUILD_DIR=build/source/$PACKAGE_ID
+                PACKAGE=$(ls build/package/splunkbase/*)
+                slim validate $PACKAGE
+          - run:
+              name: partition
+              command: |
+                source build/VERSION
+                source ~/.venv/bin/activate                
+                BUILD_DIR=build/source/$PACKAGE_ID
+                mkdir -p build/package/deployment
+                PACKAGE=$(ls build/package/splunkbase/*)
+                slim partition -o build/package/deployment $PACKAGE
     jobs:
       package:
         executor: python27
@@ -76,6 +113,9 @@ orbs:
           - store_artifacts:
               path: build/package/splunkbase
               destination: build-package-splunkbase
+          - store_artifacts:
+              path: build/package/deployment
+              destination: build-package-deployment
           - store_artifacts:
               path: build/VERSION
               destination: build-version
@@ -108,8 +148,11 @@ orbs:
                 source ~/.venv/bin/activate
                 mkdir test-results || true
                 PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
+                if [ "<<parameters.label>>" == "cloud" ]; then TEST_PARM="--mode precert --included-tags cloud"; fi
+                if [ "<<parameters.label>>" == "appinspect" ]; then TEST_PARM="--mode test"; fi
                 splunk-appinspect inspect <<parameters.options>> --data-format junitxml --output-file test-results/appinspect-mode-<<parameters.label>>.xml $PACKAGE
-                if grep failures=\"[1-9] test-results/appinspect-mode-<<parameters.label>>.xml; then exit 1; else exit 0; fi
+                if grep failures=\"[1-9] test-results/appinspect-mode-${TEST_PARM}.xml; then exit 1; else exit 0; fi
+
     jobs:
       inspect:
         parameters:
@@ -139,8 +182,9 @@ orbs:
       python37:
         docker:
           - image: circleci/python:3.7
+        resource_class: xlarge
     commands:
-      test_aio:
+      aio:
         parameters:
           splunk_version:
             description: Image version
@@ -154,46 +198,40 @@ orbs:
                 pip install git+https://github.com/pixelb/crudini        
                 mkdir test-results
           - run:
-              name: Splunk up
+              name: Splunk Testing
               command: |
+                # Start Splunk
                 ls -l deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf
                 export SPLUNK_VERSION=$(crudini --get deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf "<<parameters.splunk_version>>" VERSION)
+                export SPLUNK_APP_ID=$(crudini --get package/default/app.conf id name)
                 docker-compose -f docker-compose-ci.yml build
                 docker-compose -f docker-compose-ci.yml up -d splunk                
-                while [ $? -ne 0 ]; do docker logs c14f4fadf39a | grep "Ansible playbook complete" ; done
-                sleep 30
-          - run:
-              name: Run diag
-              when: always
-              command: |
+                until docker-compose -f docker-compose-ci.yml logs splunk | grep "Ansible playbook complete" ; do sleep 1; done
+                # Run a Splunk Diag
                 mkdir /tmp/diag
                 diag=$(docker-compose -f docker-compose-ci.yml exec splunk sudo -u splunk /opt/splunk/bin/splunk diag | grep "Splunk diagnosis file created" | sed -n 's/.* \(\/.*\.gz\)/\1/p') 
                 docker-compose -f docker-compose-ci.yml exec splunk sudo chmod +r ${diag//[$'\t\r\n']}
                 docker cp project_splunk_1:${diag//[$'\t\r\n']} /tmp/diag
-          - run:
-              name: Check btool
-              when: always
-              command: |
+                # Check with btool
                 docker-compose -f docker-compose-ci.yml exec splunk sudo /opt/splunk/bin/splunk cmd btool check
                 docker-compose -f docker-compose-ci.yml up -d splunk
                 sleep 30
-          - run:
-              name: Test
-              when: always
-              command: |
+                # Run the tests
                 docker-compose -f docker-compose-ci.yml up  --abort-on-container-exit test
-              no_output_timeout: 1h
+              no_output_timeout: 2h
           - run:
-              name: collect results
+              name: Splunk Get Results
               when: always
               command: |
-                docker volume ls
+                # Collect Results
                 docker container create --name dummy \
                                     -v project_results:/work/test-results \
                                     registry.access.redhat.com/ubi7/ubi
-                docker cp dummy:/work/test-results/test.xml test-results/
+                docker cp dummy:/work/test-results/test.xml test-results/  || true
+                docker cp dummy:/work/test-results/cim-compliance-report.md test-results/ || true
+
     jobs:
-      test_aio:
+      aio:
         parameters:
           splunk_version:
             description: Image version
@@ -206,7 +244,7 @@ orbs:
           - run: git submodule update --init
           - setup_remote_docker:
               docker_layer_caching: true
-          - test_aio:
+          - aio:
               splunk_version: <<parameters.splunk_version>>
           - store_artifacts:
               path: /tmp/diag
@@ -312,7 +350,7 @@ jobs:
             PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
             source /tmp/workspace/build/VERSION
             go get -v -u github.com/tcnksm/ghr            
-            $HOME/go/bin/ghr -t ${GH_PAT} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} -delete ${VERSION} $PACKAGE
+            $HOME/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} -delete ${VERSION} $PACKAGE
 
   publish-sbase:
     docker:
@@ -336,48 +374,51 @@ jobs:
             PACKAGE_ID=$(crudini --get package/default/app.conf id name)
             [ "${ISPRE}" == "-prerelease" ] && SPLUNKBASE_VIS="false" || SPLUNKBASE_VIS="true"                
             curl -u ${SPLUNKBASE_USERNAME}:${SPLUNKBASE_PASSWORD}  --request POST https://splunkbase.splunk.com/api/v1/app/${SPLUNKBASE_ID}/new_release/ -F "files[]=@${PACKAGE}" -F "filename=${PACKAGE_ID}.spl" -F "splunk_versions=${SPLUNKBASE_SPLUNK_VERSION}" -F "visibility=${SPLUNKBASE_VIS}"
-
+  reuse:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - run:
+          name: Install
+          command: |
+            python -m venv ~/.venv
+            source ~/.venv/bin/activate
+            pip install reuse
+      - run:
+          name: reuse-lint
+          command: |
+            source ~/.venv/bin/activate
+            reuse lint
 workflows:
   build:
     jobs:
+      - reuse:
+          filters:
+            branches:
+              only: /.*/
       - splunk-app-package/package:
           name: package
           filters:
             branches:
               only: /.*/
       - splunk-app-inspect/inspect:
-          name: splunk-app-inspect-badge
-          options: "--mode test"
-          label: "badge"
+          matrix:
+            parameters:
+              label: ["appinspect", "cloud"]
           filters:
             branches:
               only: /.*/
           requires:
             - package
-      - splunk-app-inspect/inspect:
-          name: splunk-app-inspect-cloud
-          options: "--mode precert --included-tags cloud"
-          label: "cloud"
-          filters:
-            branches:
-              only: /.*/
-          requires:
-            - package
-      - splunk-app-test/test_aio:
-          name: test-splunk-8-0
-          splunk_version: "8.0"
-          filters:
-            branches:
-              only: /.*/
-      - splunk-app-test/test_aio:
-          name: test-splunk-7-3
-          splunk_version: "7.3"
-          filters:
-            branches:
-              only: /.*/
-      - splunk-app-test/test_aio:
-          name: test-splunk-7-2
-          splunk_version: "7.2"
+      - splunk-app-test/aio:
+          matrix:
+            parameters:
+              splunk_version: ["7.2", "7.3", "8.0"]
           filters:
             branches:
               only: /.*/
@@ -385,7 +426,7 @@ workflows:
           name: tag-alpha
           tag_level: alpha
           gh_user: ${GH_USER}
-          gh_token: ${GH_PAT}
+          gh_token: ${GITHUB_TOKEN}
           filters:
             branches:
               only: develop
@@ -400,7 +441,7 @@ workflows:
           name: tag-beta
           tag_level: beta
           gh_user: ${GH_USER}
-          gh_token: ${GH_PAT}
+          gh_token: ${GITHUB_TOKEN}
           requires:
             - approval-tag-beta
       - approval-merge-beta-to-master:
@@ -413,7 +454,7 @@ workflows:
       - splunk-release/merge-to-master:
           name: merge-beta-to-master
           gh_user: ${GH_USER}
-          gh_token: ${GH_PAT}
+          gh_token: ${GITHUB_TOKEN}
           requires:
             - approval-merge-beta-to-master
           filters:
@@ -423,7 +464,7 @@ workflows:
           name: tag-candidate
           tag_level: candidate
           gh_user: ${GH_USER}
-          gh_token: ${GH_PAT}
+          gh_token: ${GITHUB_TOKEN}
           filters:
             branches:
               only: master
@@ -435,7 +476,7 @@ workflows:
           name: tag-final-major
           tag_level: final -s major
           gh_user: ${GH_USER}
-          gh_token: ${GH_PAT}
+          gh_token: ${GITHUB_TOKEN}
           requires:
             - approval-tag-final-major
       - approval-tag-final-minor:
@@ -446,7 +487,7 @@ workflows:
           name: tag-final-minor
           tag_level: final -s minor
           gh_user: ${GH_USER}
-          gh_token: ${GH_PAT}
+          gh_token: ${GITHUB_TOKEN}
           requires:
             - approval-tag-final-minor
       - approval-tag-final-patch:
@@ -457,7 +498,7 @@ workflows:
           name: tag-final-patch
           tag_level: final -s patch
           gh_user: ${GH_USER}
-          gh_token: ${GH_PAT}
+          gh_token: ${GITHUB_TOKEN}
           requires:
             - approval-tag-final-patch
   publish:

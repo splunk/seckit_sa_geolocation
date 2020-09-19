@@ -33,7 +33,7 @@ __pycache__/
 
 venv/
 .venv/
-/build/
+build/
 test-reports
 #Splunk Files
 
@@ -45,5 +45,9 @@ tests/functional
 .DS_Store
 .env
 src
-/.venv*
-/venv*
+*.lock
+*_event
+*_wait
+!deps/build
+!package/appserver/static/js/build
+*.log

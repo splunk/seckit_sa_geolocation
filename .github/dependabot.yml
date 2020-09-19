@@ -1,0 +1,33 @@
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/deps/build"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/deps/apps"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pip"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pip"
+    directory: "/tests"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
