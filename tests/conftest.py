@@ -53,13 +53,13 @@ def seckit_input(splunk_rest_uri, request):
     }
 
     splunk_rest_uri[0].post(
-        f"{splunk_rest[1]}servicesNS/nobody/SecKit_SA_geolocation/SecKit_SA_geolocation_account/create",
+        f"{splunk_rest_uri[1]}servicesNS/nobody/SecKit_SA_geolocation/SecKit_SA_geolocation_account/create",
         data=payload,
         verify=False,
     ).status_code
 
     splunk_rest_uri[0].post(
-        f"{splunk_rest[1]}servicesNS/nobody/SecKit_SA_geolocation/SecKit_SA_geolocation_geoipupdate/main?output_mode=json",
+        f"{splunk_rest_uri[1]}servicesNS/nobody/SecKit_SA_geolocation/SecKit_SA_geolocation_geoipupdate/main?output_mode=json",
         data={"disabled": "0"},
         verify=False,
     ).status_code
