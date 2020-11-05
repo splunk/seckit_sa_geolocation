@@ -1,0 +1,3 @@
+pytest-expect
+pytest-xdist
+pytest-splunk-addon==1.3.6

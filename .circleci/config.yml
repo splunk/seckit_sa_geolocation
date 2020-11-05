@@ -8,108 +8,61 @@ version: 2.1
 orbs:
   go: circleci/go@0.2.0
   splunk-app-package:
-    executors:
-      python27:
-        docker:
-          - image: circleci/python:2.7
-    commands:
+    jobs:
       package:
+        docker:
+          - image: circleci/buildpack-deps:stable
+        resource_class: large
         steps:
+          - checkout
           - run:
-              name: Install Slim
+              name: Setup Environment
               command: |
-                pip install virtualenv
-                mkdir ~/.venv
-                virtualenv ~/.venv
-                source ~/.venv/bin/activate
-                pip install semantic_version==2.5.0
-                pip install https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.0.tar.gz
-                pip install git+https://github.com/pixelb/crudini
+                unset PYENV_ROOT
+                curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
+                export PATH="$HOME/.pyenv/bin:$PATH"
+                eval "$(pyenv init -)"
+                eval "$(pyenv virtualenv-init -)"
+                for line in `cat .python-version`; do pyenv install -s "$line"; done                
+                python2 -m pip install --upgrade pip
+                python2 -m pip install --upgrade virtualenv
+                python3 -m pip install --upgrade pip
+                python3 -m pip install --upgrade virtualenv                
+                if [ ! -d "./.venv" ]; then
+                python3 -m virtualenv .venv -p python3 > /dev/null
+                fi
+                source .venv/bin/activate
+                pip install -r requirements_dev.txt || true
           - run:
-              name: version
+              name: Generate Addon
               command: |
-                source ~/.venv/bin/activate   
-                mkdir -p build
-                VERSION=$(./semtag getcurrent)
-                VERSION_SPLUNK=$(python ./splver.py ${VERSION})
-                VERSION_PACKAGE=$(echo $VERSION | sed 's/\-[^+]*+/-B/g' | sed 's/v//')
-                VERSION_DOCKER_M=$(echo  $VERSION | sed -n 's/v\([0-9]\).*/\1/p')
-                VERSION_DOCKER_MM=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\).*/\1/p')
-                VERSION_DOCKER_MMP=$(echo  $VERSION | sed -n 's/v\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p')
-                [ "$(./semtag getfinal)" != "${CIRCLE_TAG}" ] && ISPRE="-prerelease" || ISPRE=""
-                PACKAGE_ID=$(crudini --get package/default/app.conf id name)
-
-
-                echo export VERSION=${VERSION} >build/VERSION
-                echo export VERSION_SPLUNK=${VERSION_SPLUNK} >>build/VERSION
-                echo export VERSION_PACKAGE=${VERSION_PACKAGE} >>build/VERSION
-                echo export VERSION_DOCKER_M=${VERSION_DOCKER_M} >>build/VERSION
-                echo export VERSION_DOCKER_MM=${VERSION_DOCKER_MM} >>build/VERSION
-                echo export VERSION_DOCKER_MMP=${VERSION_DOCKER_MMP} >>build/VERSION
-                echo export PACKAGE_ID=${PACKAGE_ID} >>build/VERSION
-                echo export PACKAGE_BUILD=$(date +%s) >>build/VERSION
-                echo export ISPRE=${ISPRE} >>build/VERSION
+                export PATH="$HOME/.pyenv/bin:$PATH"
+                eval "$(pyenv init -)"
+                eval "$(pyenv virtualenv-init -)"
+                source .venv/bin/activate
+                ucc-gen
           - run:
-              name: version
+              name: Generating package
               command: |
-                source build/VERSION
-                source ~/.venv/bin/activate                
-                BUILD_DIR=build/source/$PACKAGE_ID
-                mkdir -p $BUILD_DIR
-                cp -r package/* $BUILD_DIR/
-                rm -rf $BUILD_DIR/samples
-                rm -rf $BUILD_DIR/default/eventgen.conf
-                crudini --set $BUILD_DIR/default/app.conf launcher version $VERSION_SPLUNK
-                crudini --set $BUILD_DIR/default/app.conf id version $VERSION_SPLUNK
-                crudini --set $BUILD_DIR/default/app.conf install build ${PACKAGE_BUILD}
-          - run:
-              name: license
-              command: |
-                source build/VERSION
-                source ~/.venv/bin/activate                
-                BUILD_DIR=build/source/$PACKAGE_ID
-                cp -r LICENSES $BUILD_DIR/
-                #In the future use reuse to produce spdx but we can't do that until we can run python3 in this phase
-          - run:
-              name: package
-              command: |
-                source build/VERSION
-                source ~/.venv/bin/activate                
-                BUILD_DIR=build/source/$PACKAGE_ID
+                export PATH="$HOME/.pyenv/bin:$PATH"
+                eval "$(pyenv init -)"
+                eval "$(pyenv virtualenv-init -)"
+                PACKAGE_ID=$(ls output/)
+                BUILD_DIR=output/$PACKAGE_ID              
+                source .venv/bin/activate
                 slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
                 cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
                 mkdir -p build/package/splunkbase
                 mkdir -p build/package/deployment
                 slim package -o build/package/splunkbase $BUILD_DIR 
-                ls build/package/splunkbase
-          - run:
-              name: validate
-              command: |
-                source build/VERSION
-                source ~/.venv/bin/activate                
-                BUILD_DIR=build/source/$PACKAGE_ID
-                PACKAGE=$(ls build/package/splunkbase/*)
-                slim validate $PACKAGE
-          - run:
-              name: partition
-              command: |
-                source build/VERSION
-                source ~/.venv/bin/activate                
-                BUILD_DIR=build/source/$PACKAGE_ID
                 mkdir -p build/package/deployment
                 PACKAGE=$(ls build/package/splunkbase/*)
-                slim partition -o build/package/deployment $PACKAGE
-    jobs:
-      package:
-        executor: python27
-        steps:
-          - checkout
-          - package
+                slim validate $PACKAGE
           - persist_to_workspace:
               root: /home/circleci/project
               paths:
-                - build/package/splunkbase
-                - build/VERSION
+                - output
+                - build
           - store_artifacts:
               path: build/package/splunkbase
               destination: build-package-splunkbase
@@ -191,12 +144,15 @@ orbs:
             type: string
             default: latest
         steps:
+          - attach_workspace:
+              at: /tmp/workspace
           - run:
               name: Setup for testing
               command: |
-                pip install -r tests/requirements.txt
+                pip install -r requirements_dev.txt
                 pip install git+https://github.com/pixelb/crudini        
                 mkdir test-results
+                cp -r /tmp/workspace/output output
           - run:
               name: Splunk Testing
               command: |
@@ -204,6 +160,7 @@ orbs:
                 ls -l deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf
                 export SPLUNK_VERSION=$(crudini --get deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf "<<parameters.splunk_version>>" VERSION)
                 export SPLUNK_APP_ID=$(crudini --get package/default/app.conf id name)
+                export SPLUNK_APP_PACKAGE=output/$(ls output/)
                 docker-compose -f docker-compose-ci.yml build
                 docker-compose -f docker-compose-ci.yml up -d splunk                
                 until docker-compose -f docker-compose-ci.yml logs splunk | grep "Ansible playbook complete" ; do sleep 1; done
@@ -225,10 +182,10 @@ orbs:
               command: |
                 # Collect Results
                 docker container create --name dummy \
-                                    -v project_results:/work/test-results \
+                                    -v project_results:/home/circleci/work/test-results \
                                     registry.access.redhat.com/ubi7/ubi
-                docker cp dummy:/work/test-results/test.xml test-results/  || true
-                docker cp dummy:/work/test-results/cim-compliance-report.md test-results/ || true
+                docker cp dummy:/home/circleci/work/test-results/test.xml test-results/  || true
+                docker cp dummy:/home/circleci/work/test-results/cim-compliance-report.md test-results/ || true
 
     jobs:
       aio:
@@ -416,6 +373,10 @@ workflows:
           requires:
             - package
       - splunk-app-test/aio:
+          context:
+            - gdi-reportportal
+          requires:
+            - package
           matrix:
             parameters:
               splunk_version: ["7.2", "7.3", "8.0"]

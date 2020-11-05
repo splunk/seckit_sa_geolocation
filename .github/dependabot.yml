@@ -27,6 +27,21 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "pip"
+    directory: "/package/lib"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pip"
+    directory: "/lib/py2"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pip"
+    directory: "/lib/py3"
+    target-branch: "develop"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pip"
     directory: "/tests"
     target-branch: "develop"
     schedule:

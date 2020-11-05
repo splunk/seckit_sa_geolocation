@@ -5,5 +5,5 @@
 ##
 ##
 
-cd /work
+cd /home/circleci/work
 pytest $@
