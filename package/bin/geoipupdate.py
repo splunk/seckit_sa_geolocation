@@ -1,5 +1,5 @@
 from builtins import str
-import seckit_sa_geolocation_declare
+import input_module_geoipupdate
 
 import os
 import sys
