@@ -1,6 +1,0 @@
-jinja2
-jinja2_time
-pytz
-pytest-expect
-pytest-xdist
-pytest-splunk-addon==1.3.0
