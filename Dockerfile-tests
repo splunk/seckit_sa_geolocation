@@ -7,20 +7,18 @@
 #You should have received a copy of the CC0 legalcode along with this
 #work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 FROM circleci/python:3.7-browsers
-USER circleci
 RUN mkdir -p /home/circleci/work/tests
 RUN mkdir -p /home/circleci/work/test-results/functional
 
 COPY tests/entrypoint.sh /
-COPY tests/pytest-ci.ini /home/circleci/work/pytest.ini
 COPY .pytest.expect /home/circleci/work/.pytest.expect
-
+COPY requirements_dev.txt /home/circleci/work/
 COPY tests /home/circleci/work/tests
-RUN pip install -r /home/circleci/work/tests/requirements.txt
 RUN cd /home/circleci/work/tests && ls
-RUN pip install /home/circleci/work/tests/addon-factory-smartx-ui-test-library.tar.gz
+
 RUN cd ../..
 COPY package /home/circleci/work/package
+RUN sudo chown -R circleci /home/circleci/
 
-CMD /entrypoint.sh
-
+USER circleci
+ENTRYPOINT /entrypoint.sh

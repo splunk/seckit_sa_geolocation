@@ -7,6 +7,23 @@ version: "3.7"
 
 services:
   test:
+    environment:
+      - SAUCE_USERNAME=${SAUCE_USERNAME}
+      - SAUCE_PASSWORD=${SAUCE_PASSWORD}
+      - TEST_SET=${TEST_SET}
+      - SAUCE_TUNNEL_ID=${SAUCE_IDENTIFIER}
+      - SAUCE_TUNNEL_PARENT=none
+      - UI_TEST_HEADLESS=${UI_TEST_HEADLESS}
+      - RERUN_COUNT=${RERUN_COUNT}
+      - TEST_BROWSER=${TEST_BROWSER}
+      - RP_ENDPOINT=${RP_ENDPOINT}
+      - RP_UUID=${RP_UUID}
+      - RP_LAUNCH_ATTRIBUTES=${RP_LAUNCH_ATTRIBUTES}
+      - RP_PROJECT=${RP_PROJECT}
+      - RP_LAUNCH=${RP_LAUNCH}
+      - RP_LAUNCH_DESC=${RP_LAUNCH_DESC}
+    env_file:
+      - test_credentials.env
     build:
       context: .
       dockerfile: Dockerfile-tests
@@ -14,7 +31,7 @@ services:
       - splunk
       - sc4s
     volumes:
-      - results:/work/test-results
+      - results:/home/circleci/work
 
   sc4s:
     image: splunk/scs:latest
@@ -59,7 +76,7 @@ services:
       dockerfile: Dockerfile-splunk
       args:
         SPLUNK_APP_ID: ${SPLUNK_APP_ID}
-        SPLUNK_APP_PACKAGE: package
+        SPLUNK_APP_PACKAGE: ${SPLUNK_APP_PACKAGE}
         SPLUNK_VERSION: ${SPLUNK_VERSION}
     hostname: splunk
     ports:
@@ -71,6 +88,19 @@ services:
       - SPLUNK_PASSWORD=Chang3d!
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_HEC_TOKEN=9b741d03-43e9-4164-908b-e09102327d22
+
+  sauceconnect:
+    build:
+      context: .
+      dockerfile: Dockerfile-saucelabs
+    environment:
+      - SAUCE_USERNAME=${SAUCE_USERNAME}
+      - SAUCE_PASSWORD=${SAUCE_PASSWORD}
+      - SAUCE_TUNNEL_ID=${SAUCE_IDENTIFIER}
+      - SAUCE_TUNNEL_PARENT=none
+    hostname: sauceconnect
+    ports:
+      - "4445"
 
 volumes:
   results:
