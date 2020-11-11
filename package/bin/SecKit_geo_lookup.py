@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import input_module_geoipupdate
+import import_declare_test
 import os.path
 import csv
 import sys
