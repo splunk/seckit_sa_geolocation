@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import seckit_sa_geolocation_declare
+import input_module_geoipupdate
 import os.path
 import csv
 import sys
