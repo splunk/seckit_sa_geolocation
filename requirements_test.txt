@@ -1,6 +1,0 @@
-
-pytest
-pytest-runner
-requests
-httplib2
--r tests/requirements.txt
