@@ -3,13 +3,7 @@
 # Use of this source code is governed by a BSD-2-clause-style
 # license that can be found in the LICENSE-BSD2 file or at
 # https://opensource.org/licenses/BSD-2-Clause
-import datetime
-import random
-import pytz
 
-from jinja2 import Environment, environment
-
-env = Environment(extensions=['jinja2_time.TimeExtension'])
 
 
 def test_isp(record_property, splunk_search_util):
