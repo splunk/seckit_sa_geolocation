@@ -11,7 +11,7 @@ def test_isp(record_property, splunk_search_util,seckit_input):
     search = "| makeresults | eval src=\"8.8.8.8\" | `seckit_iplocation(src,src)` | search src_country=US"
 
     result = splunk_search_util.checkQueryCountIsGreaterThanZero(
-        search, interval=1, retries=1
+        search, interval=10, retries=10
     )
 
     assert result
