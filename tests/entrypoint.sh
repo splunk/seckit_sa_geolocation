@@ -18,7 +18,7 @@ cp -f .pytest.expect ${TEST_SET}
 
 echo "Executing Tests..."
 RERUN_COUNT=${RERUN_COUNT:-1}
-if [ -z ${TEST_BROWSER} ] 
+if [ -z ${TEST_BROWSER} ]
 then
     echo Test Args $@ ${TEST_SET}
     pytest $@ ${TEST_SET}
@@ -35,7 +35,10 @@ else
         test_exit_code=$?
     else
         echo "Check Saucelab connection..."
-        wget --retry-connrefused --no-check-certificate -T 10 sauceconnect:4445 
+        wget --retry-connrefused --no-check-certificate -T 10 sauceconnect:4445
+        sauce_connect_connection=$?
+        echo "Sauce Connect Status:$sauce_connect_connection"
+        [ "$sauce_connect_connection" -eq "4" ] && echo "SauceConnect is not running. Exiting the tests...." && exit 1
         echo Test Args $@ --reruns=${RERUN_COUNT} --browser=${TEST_BROWSER} ${TEST_SET}
         pytest $@ --reruns=${RERUN_COUNT} --browser=${TEST_BROWSER} \
         --reportportal -o "rp_endpoint=${RP_ENDPOINT}" -o "rp_launch_attributes=${RP_LAUNCH_ATTRIBUTES}" \
@@ -44,4 +47,4 @@ else
         test_exit_code=$?
     fi
 fi
-exit "$test_exit_code" 
+exit "$test_exit_code"
