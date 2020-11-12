@@ -22,6 +22,8 @@ services:
       - RP_PROJECT=${RP_PROJECT}
       - RP_LAUNCH=${RP_LAUNCH}
       - RP_LAUNCH_DESC=${RP_LAUNCH_DESC}
+      - MAXMIND_ACCOUNT=${MAXMIND_ACCOUNT}
+      - MAXMIND_KEY=${MAXMIND_KEY}
     env_file:
       - test_credentials.env
     build:
