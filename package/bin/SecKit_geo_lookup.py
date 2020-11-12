@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import seckit_sa_geolocation_declare
+import import_declare_test
 import os.path
 import csv
 import sys
@@ -38,6 +38,8 @@ def main():
                 city2reader = geoip2.database.Reader(city2_file)
             elif (os.path.isfile(city2lite_file)):
                 city2reader = geoip2.database.Reader(city2lite_file)
+            else:
+                city2reader = None
 
             if not city2reader is None:
                 city2response = city2reader.city(result[ipfield])

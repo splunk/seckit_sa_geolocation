@@ -38,4 +38,17 @@
       </table>
     </panel>
   </row>
+  <row>
+    <panel>
+      <event>
+        <title>Updater events</title>
+        <search>
+          <query>index=_internal source="*SecKit_SA_geolocation_input.log"</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="list.drilldown">none</option>
+      </event>
+    </panel>
+  </row>
 </dashboard>

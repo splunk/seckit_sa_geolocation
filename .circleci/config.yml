@@ -18,38 +18,23 @@ orbs:
           - run:
               name: Setup Environment
               command: |
-                unset PYENV_ROOT
-                curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
-                export PATH="$HOME/.pyenv/bin:$PATH"
-                eval "$(pyenv init -)"
-                eval "$(pyenv virtualenv-init -)"
-                for line in `cat .python-version`; do pyenv install -s "$line"; done                
-                python2 -m pip install --upgrade pip
-                python2 -m pip install --upgrade virtualenv
-                python3 -m pip install --upgrade pip
-                python3 -m pip install --upgrade virtualenv                
-                if [ ! -d "./.venv" ]; then
-                python3 -m virtualenv .venv -p python3 > /dev/null
-                fi
-                source .venv/bin/activate
+                sudo apt-get update
+                sudo apt-get install -y python2 python-pip python-virtualenv python3 python3.7 python3-pip python3-virtualenv
+                python3.7 -m virtualenv ~/.venv -p python3
+                source ~/.venv/bin/activate
                 pip install -r requirements_dev.txt || true
+                pip install semantic_version==2.6.0
           - run:
               name: Generate Addon
               command: |
-                export PATH="$HOME/.pyenv/bin:$PATH"
-                eval "$(pyenv init -)"
-                eval "$(pyenv virtualenv-init -)"
-                source .venv/bin/activate
+                source ~/.venv/bin/activate
                 ucc-gen
           - run:
               name: Generating package
               command: |
-                export PATH="$HOME/.pyenv/bin:$PATH"
-                eval "$(pyenv init -)"
-                eval "$(pyenv virtualenv-init -)"
                 PACKAGE_ID=$(ls output/)
                 BUILD_DIR=output/$PACKAGE_ID              
-                source .venv/bin/activate
+                source ~/.venv/bin/activate
                 slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
                 cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
                 mkdir -p build/package/splunkbase
@@ -57,6 +42,7 @@ orbs:
                 slim package -o build/package/splunkbase $BUILD_DIR 
                 mkdir -p build/package/deployment
                 PACKAGE=$(ls build/package/splunkbase/*)
+                slim partition $PACKAGE -o build/package/deployment/ || true
                 slim validate $PACKAGE
           - persist_to_workspace:
               root: /home/circleci/project
@@ -72,145 +58,6 @@ orbs:
           - store_artifacts:
               path: build/VERSION
               destination: build-version
-  splunk-app-inspect:
-    executors:
-      python37:
-        docker:
-          - image: circleci/python:3.7
-    commands:
-      inspect:
-        parameters:
-          options:
-            description: Inspect options
-            type: string
-            default: --mode test
-          label:
-            description: string to identify test options in file name of output
-            type: string
-            default: test
-        steps:
-          - run:
-              name: Install
-              command: |
-                python -m venv ~/.venv
-                source ~/.venv/bin/activate
-                pip install https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
-          - run:
-              name: inspect
-              command: |
-                source ~/.venv/bin/activate
-                mkdir test-results || true
-                PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
-                if [ "<<parameters.label>>" == "cloud" ]; then TEST_PARM="--mode precert --included-tags cloud"; fi
-                if [ "<<parameters.label>>" == "appinspect" ]; then TEST_PARM="--mode test"; fi
-                splunk-appinspect inspect <<parameters.options>> --data-format junitxml --output-file test-results/appinspect-mode-<<parameters.label>>.xml $PACKAGE
-                if grep failures=\"[1-9] test-results/appinspect-mode-${TEST_PARM}.xml; then exit 1; else exit 0; fi
-
-    jobs:
-      inspect:
-        parameters:
-          options:
-            description: Inspect options
-            type: string
-            default: --mode test
-          label:
-            description: string to identify test options in file name of output
-            type: string
-            default: test
-        executor: python37
-        steps:
-          - checkout
-          - attach_workspace:
-              at: /tmp/workspace
-          - inspect:
-              options: <<parameters.options>>
-              label: <<parameters.label>>
-          - store_artifacts:
-              path: test-results
-              destination: test-results
-          - store_test_results:
-              path: test-results
-  splunk-app-test:
-    executors:
-      python37:
-        docker:
-          - image: circleci/python:3.7
-        resource_class: xlarge
-    commands:
-      aio:
-        parameters:
-          splunk_version:
-            description: Image version
-            type: string
-            default: latest
-        steps:
-          - attach_workspace:
-              at: /tmp/workspace
-          - run:
-              name: Setup for testing
-              command: |
-                pip install -r requirements_dev.txt
-                pip install git+https://github.com/pixelb/crudini        
-                mkdir test-results
-                cp -r /tmp/workspace/output output
-          - run:
-              name: Splunk Testing
-              command: |
-                # Start Splunk
-                ls -l deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf
-                export SPLUNK_VERSION=$(crudini --get deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf "<<parameters.splunk_version>>" VERSION)
-                export SPLUNK_APP_ID=$(crudini --get package/default/app.conf id name)
-                export SPLUNK_APP_PACKAGE=output/$(ls output/)
-                docker-compose -f docker-compose-ci.yml build
-                docker-compose -f docker-compose-ci.yml up -d splunk                
-                until docker-compose -f docker-compose-ci.yml logs splunk | grep "Ansible playbook complete" ; do sleep 1; done
-                # Run a Splunk Diag
-                mkdir /tmp/diag
-                diag=$(docker-compose -f docker-compose-ci.yml exec splunk sudo -u splunk /opt/splunk/bin/splunk diag | grep "Splunk diagnosis file created" | sed -n 's/.* \(\/.*\.gz\)/\1/p') 
-                docker-compose -f docker-compose-ci.yml exec splunk sudo chmod +r ${diag//[$'\t\r\n']}
-                docker cp project_splunk_1:${diag//[$'\t\r\n']} /tmp/diag
-                # Check with btool
-                docker-compose -f docker-compose-ci.yml exec splunk sudo /opt/splunk/bin/splunk cmd btool check
-                docker-compose -f docker-compose-ci.yml up -d splunk
-                sleep 30
-                # Run the tests
-                docker-compose -f docker-compose-ci.yml up  --abort-on-container-exit test
-              no_output_timeout: 2h
-          - run:
-              name: Splunk Get Results
-              when: always
-              command: |
-                # Collect Results
-                docker container create --name dummy \
-                                    -v project_results:/home/circleci/work/test-results \
-                                    registry.access.redhat.com/ubi7/ubi
-                docker cp dummy:/home/circleci/work/test-results/test.xml test-results/  || true
-                docker cp dummy:/home/circleci/work/test-results/cim-compliance-report.md test-results/ || true
-
-    jobs:
-      aio:
-        parameters:
-          splunk_version:
-            description: Image version
-            type: string
-            default: latest
-        executor: python37
-        steps:
-          - checkout
-          - run: git submodule sync
-          - run: git submodule update --init
-          - setup_remote_docker:
-              docker_layer_caching: true
-          - aio:
-              splunk_version: <<parameters.splunk_version>>
-          - store_artifacts:
-              path: /tmp/diag
-              destination: test-diag
-          - store_artifacts:
-              path: test-results
-              destination: test-results
-          - store_test_results:
-              path: test-results
 
   splunk-release:
     executors:
@@ -290,6 +137,189 @@ orbs:
               gh_token: <<parameters.gh_token>>
 
 jobs:
+  splunk-app-inspect:
+    parameters:
+      options:
+        description: Inspect options
+        type: string
+        default: --mode test
+      label:
+        description: string to identify test options in file name of output
+        type: string
+        default: test
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install
+          command: |
+            python -m venv ~/.venv
+            source ~/.venv/bin/activate
+            pip install https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
+      - run:
+          name: inspect
+          command: |
+            source ~/.venv/bin/activate
+            mkdir test-results || true
+            PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
+            if [ "<<parameters.label>>" == "cloud" ]; then TEST_PARM="--mode precert --included-tags cloud"; fi
+            if [ "<<parameters.label>>" == "appinspect" ]; then TEST_PARM="--mode test"; fi
+            splunk-appinspect inspect <<parameters.options>> --data-format junitxml --output-file test-results/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml $PACKAGE
+      - run:
+          name: report
+          command: |
+            source ~/.venv/bin/activate
+            export VERSION=$(./semtag getfinal)
+            [ "${VERSION}" == "<< pipeline.git.tag >>" ] && export RELEASE=<< pipeline.git.tag >> || export RELEASE=${VERSION}-post            
+            cat test-results/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml | sed 's/<skipped\/>//g' | sed 's/skipped[^ ]*/skipped=\"0\"/g' >/tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml
+            zip -j /tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.zip /tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml
+
+            LUUID=$(curl -X POST "$RP_ENDPOINT/api/v1/addonfactory/launch/import" -H "accept: */*" -H "Content-Type: multipart/form-data" -H "Authorization: bearer $RP_UUID" -F "file=@/tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.zip;type=application/zip" 2>/dev/null | sed 's/\(.*id = \)\([^ ]*\)\(.*\)/\2/')
+            echo LUUID=$LUUID
+            LID=$(curl -X GET "$RP_ENDPOINT/api/v1/addonfactory/launch/uuid/$LUUID" -H "accept: */*" -H "Authorization: bearer $RP_UUID" 2>/dev/null| jq .id)            
+            echo LID=$LID
+            APPINSPECTVER=$(splunk-appinspect list version | sed 's/\(.*Version \)\(.*\)/\2/')
+            UPDATE="
+                { \"attributes\": 
+                    [ 
+                        { \"key\": \"job\",
+                        \"value\": \"${CIRCLE_JOB}\"
+                        },
+                        { \"key\": \"appinspect\",
+                        \"value\": \"$APPINSPECTVER\"
+                        },
+                        { \"key\": \"branch\",
+                        \"value\": \"<< pipeline.git.branch >>\"
+                        },
+                        { \"key\": \"commit\",
+                        \"value\": \"${CIRCLE_SHA1}\"
+                        },
+                        { \"key\": \"release\",
+                        \"value\": \"${RELEASE}\"
+                        },
+                        { \"key\": \"version\",
+                        \"value\": \"$(./semtag getcurrent)\"
+                        },
+                        { \"key\": \"repo\",
+                        \"value\": \"$CIRCLE_PROJECT_REPONAME\"
+                        }
+                    ]
+                }"
+            echo $UPDATE | jq
+            curl -X PUT "$RP_ENDPOINT/api/v1/addonfactory/launch/$LID/update" \
+              -H "accept: */*" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: bearer $RP_UUID" \
+              -d "$UPDATE"
+      - run:
+          name: set result
+          command: |
+            if grep failures=\"[1-9] test-results/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml>/dev/null; then exit 1; else exit 0; fi
+      - store_artifacts:
+          path: test-results
+          destination: test-results
+      - store_test_results:
+          path: test-results
+  splunk-app-test:
+    parameters:
+      splunk_version:
+        description: Image version
+        type: string
+        default: latest
+      test_set:
+        description: Test Set
+        type: string
+        default: knowledge
+    docker:
+      - image: circleci/python:3.7
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: git submodule sync
+      - run: git submodule update --init
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Setup for testing
+          command: |
+            pip install git+https://github.com/pixelb/crudini        
+            mkdir test-results
+            cp -rf /tmp/workspace/* .
+      - run:
+          name: Splunk Testing
+          no_output_timeout: 2h
+          command: |
+            # Start Splunk
+            TEST_SET=$(echo "<<parameters.test_set>>" | awk -F- '{print $1}' )
+            BROWSER=$(echo "<<parameters.test_set>>" | awk -F- '{print $2}' )
+            [ ! -d "tests/$TEST_SET" ] && exit 0
+            [ "$BROWSER" = "safari" ] && [ "$UI_TEST_HEADLESS" = "true" ] && exit 0
+            export SPLUNK_VERSION=$(crudini --get deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf "<<parameters.splunk_version>>" VERSION)
+            export SPLUNK_APP_ID=$(crudini --get package/default/app.conf id name)
+            export SPLUNK_APP_PACKAGE=output/$(ls output/)
+            export TEST_SET=tests/$TEST_SET
+            export TEST_BROWSER=$BROWSER
+            # JOB_NAME: For Saucelabs integration. Used as a build-name.
+            export JOB_NAME="CircleCI::$CIRCLE_PROJECT_REPONAME[$CIRCLE_BRANCH][$TEST_BROWSER] #$CIRCLE_BUILD_NUM"
+            export SAUCE_IDENTIFIER=$SAUCE_IDENTIFIER-$(cat /proc/sys/kernel/random/uuid)
+
+            #Report portal integration
+            export RP_LAUNCH_ATTRIBUTES="'job:${CIRCLE_JOB}' 'deployment:byoe' 'splunkmajor:<< parameters.splunk_version >>' 'splunk:${SPLUNK_VERSION}' 'branch:<< pipeline.git.branch >>' 'commit:${CIRCLE_SHA1}' 'release:${RELEASE}' 'version:$(./semtag getcurrent)' 'test_set:<<parameters.test_set>>' 'repo:${CIRCLE_PROJECT_REPONAME}'"
+            export RP_PROJECT=addonfactory
+
+            export RP_LAUNCH="$CIRCLE_PROJECT_REPONAME-$(echo <<parameters.test_set>> | sed 's/\(.*\)\(-.*\)/\1/')"
+            export RP_LAUNCH_DESC="ci run"
+
+            # Build
+            docker-compose -f docker-compose-ci.yml build
+
+            # Saucelab connection
+            [ -z $BROWSER ] || [ "$UI_TEST_HEADLESS" = "true" ] || docker-compose -f docker-compose-ci.yml up -d sauceconnect                
+            # Start Splunk
+            docker-compose -f docker-compose-ci.yml up -d splunk                
+            until docker-compose -f docker-compose-ci.yml logs splunk | grep "Ansible playbook complete" ; do sleep 1; done
+            # Run a Splunk Diag
+            mkdir /tmp/diag
+            diag=$(docker-compose -f docker-compose-ci.yml exec splunk sudo -u splunk /opt/splunk/bin/splunk diag | grep "Splunk diagnosis file created" | sed -n 's/.* \(\/.*\.gz\)/\1/p') 
+            docker-compose -f docker-compose-ci.yml exec splunk sudo chmod +r ${diag//[$'\t\r\n']}
+            docker cp project_splunk_1:${diag//[$'\t\r\n']} /tmp/diag
+            # Check with btool
+            docker-compose -f docker-compose-ci.yml exec splunk sudo /opt/splunk/bin/splunk cmd btool check
+            docker-compose -f docker-compose-ci.yml up -d splunk
+            until docker-compose -f docker-compose-ci.yml logs splunk | grep "Ansible playbook complete" ; do sleep 1; done
+
+            # Normal Inspecting
+            [ -z $BROWSER ] || [ "$UI_TEST_HEADLESS" = "true" ] || docker-compose -f docker-compose-ci.yml logs sauceconnect
+            docker ps -a
+                            
+            # Run the tests
+            test_exit_code=0
+
+            docker-compose -f docker-compose-ci.yml up --abort-on-container-exit test || test_exit_code=$?
+            # Collect Results
+            docker container create --name dummy \
+                                -v project_results:/home/circleci/work \
+                                registry.access.redhat.com/ubi7/ubi
+            docker cp dummy:/home/circleci/work/test-results/test.xml test-results/  || echo "ignoring..."
+            docker cp dummy:/home/circleci/work/assets test-results/assets  || echo "ignoring..."
+            docker cp dummy:/home/circleci/work/report.html test-results/report.html  || echo "ignoring..."
+            docker cp dummy:/home/circleci/work/test-results/cim-compliance-report.md test-results/ || echo "ignoring..."
+            docker-compose -f docker-compose-ci.yml down || echo "ignoring..."
+            exit "$test_exit_code"
+      - store_artifacts:
+          path: /tmp/diag
+          destination: test-diag
+      - store_artifacts:
+          path: test-results
+          destination: test-results
+      - store_test_results:
+          path: test-results
+
   publish-gh:
     docker:
       - image: circleci/python:3.7
@@ -363,7 +393,9 @@ workflows:
           filters:
             branches:
               only: /.*/
-      - splunk-app-inspect/inspect:
+      - splunk-app-inspect:
+          context:
+            - gdi-reportportal
           matrix:
             parameters:
               label: ["appinspect", "cloud"]
@@ -372,14 +404,17 @@ workflows:
               only: /.*/
           requires:
             - package
-      - splunk-app-test/aio:
+      - splunk-app-test:
           context:
+            - gdi-saucelabs
             - gdi-reportportal
           requires:
             - package
           matrix:
             parameters:
-              splunk_version: ["7.2", "7.3", "8.0"]
+              splunk_version: ["8.0"]
+              test_set:
+                ["knowledge", "ui-firefox", "ui-chrome", "ui-safari", "ui-edge"]
           filters:
             branches:
               only: /.*/
