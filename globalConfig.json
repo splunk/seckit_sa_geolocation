@@ -2,7 +2,7 @@
     "meta": {
         "name": "SecKit_SA_geolocation",
         "displayName": "SecKit_SA_geolocation",
-        "version": "5.0.8a99be503",
+        "version": "5.0.8a97c6e71",
         "apiVersion": "3.0.0",
         "restRoot": "SecKit_SA_geolocation",
         "schemaVersion": "0.0.1"
@@ -35,10 +35,24 @@
                     "entity": [
                         {
                             "field": "name",
-                            "label": "Account name",
+                            "label": "GlobalAccount name",
                             "type": "text",
                             "required": true,
-                            "help": "Enter a unique name for this account.",
+                            "help": "Used by the input to locate the secured credentials",
+                            "validators": [
+                                {
+                                    "type": "regex",
+                                    "pattern": "^main$",
+                                    "errorMsg": "Only one account is supported must be main"
+                                }
+                            ]
+                        },
+                        {
+                            "field": "username",
+                            "label": "Account/User ID",
+                            "type": "text",
+                            "required": true,
+                            "help": "The numeric account ID assigned by maxmind",
                             "validators": [
                                 {
                                     "type": "string",
@@ -48,36 +62,18 @@
                                 },
                                 {
                                     "type": "regex",
-                                    "pattern": "^[a-zA-Z]\\w*$",
-                                    "errorMsg": "Account name must start with a letter and followed by alphabetic letters, digits or underscores."
-                                }
-                            ]
-                        },
-                        {
-                            "field": "username",
-                            "label": "Username",
-                            "type": "text",
-                            "required": true,
-                            "help": "Enter the username for this account.",
-                            "options": {
-                                "placeholder": "Enter the username here"
-                            },
-                            "validators": [
-                                {
-                                    "type": "string",
-                                    "minLength": 1,
-                                    "maxLength": 200,
-                                    "errorMsg": "Length of username should be between 1 and 200"
+                                    "pattern": "^\\d+$",
+                                    "errorMsg": "Must be a sequence of digits"
                                 }
                             ]
                         },
                         {
                             "field": "password",
-                            "label": "Password",
+                            "label": "License key",
                             "type": "text",
                             "encrypted": true,
                             "required": true,
-                            "help": "Enter the password for this account.",
+                            "help": "Maxmind License Key",
                             "validators": [
                                 {
                                     "type": "string",
