@@ -25,19 +25,26 @@ def docker_compose_files(request):
 
 def pytest_addoption(parser):
     group = parser.getgroup("seckit-geolocation")
-
+    
+    MAXMIND_ACCOUNT = os.getenv('MAXMIND_ACCOUNT')
+    MAXMIND_KEY = os.getenv('MAXMIND_KEY')
+    if MAXMIND_ACCOUNT is None:
+        MAXMIND_ACCOUNT = "1111" 
+    if MAXMIND_KEY is None:
+        MAXMIND_KEY = "invalid" 
     group.addoption(
         "--maxmind_id",
         action="store",
         dest="maxmind_id",
-        default="1111",
+        default=MAXMIND_ACCOUNT,
         help="Numeric ID assigned by maxmind",
     )
+    
     group.addoption(
         "--maxmind_password",
         action="store",
         dest="maxmind_password",
-        default="none",
+        default=MAXMIND_KEY,
         help="Key for the license ID used as password",
     )
 
