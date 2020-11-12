@@ -167,7 +167,7 @@ jobs:
             PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
             if [ "<<parameters.label>>" == "cloud" ]; then TEST_PARM="--mode precert --included-tags cloud"; fi
             if [ "<<parameters.label>>" == "appinspect" ]; then TEST_PARM="--mode test"; fi
-            splunk-appinspect inspect <<parameters.options>> --data-format junitxml --output-file test-results/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml $PACKAGE
+            splunk-appinspect inspect <<parameters.options>> --data-format junitxml --output-file test-results/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml $PACKAGE || true
       - run:
           name: report
           command: |
@@ -267,6 +267,11 @@ jobs:
             # JOB_NAME: For Saucelabs integration. Used as a build-name.
             export JOB_NAME="CircleCI::$CIRCLE_PROJECT_REPONAME[$CIRCLE_BRANCH][$TEST_BROWSER] #$CIRCLE_BUILD_NUM"
             export SAUCE_IDENTIFIER=$SAUCE_IDENTIFIER-$(cat /proc/sys/kernel/random/uuid)
+
+            #export env credentials
+            if [ -f ".circleci/testcredentials.sh" ]; then
+                bash ./.circleci/testcredentials.sh
+            fi
 
             #Report portal integration
             export RP_LAUNCH_ATTRIBUTES="'job:${CIRCLE_JOB}' 'deployment:byoe' 'splunkmajor:<< parameters.splunk_version >>' 'splunk:${SPLUNK_VERSION}' 'branch:<< pipeline.git.branch >>' 'commit:${CIRCLE_SHA1}' 'release:${RELEASE}' 'version:$(./semtag getcurrent)' 'test_set:<<parameters.test_set>>' 'repo:${CIRCLE_PROJECT_REPONAME}'"

@@ -6,6 +6,5 @@
 {
     "python.pythonPath": ".venv/bin/python",
     "python.testing.pytestEnabled": true,
-    "python.testing.autoTestDiscoverOnSaveEnabled": true,
-    "python.formatting.provider": "autopep8"
+    "python.testing.autoTestDiscoverOnSaveEnabled": true
 }

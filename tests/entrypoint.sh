@@ -18,17 +18,26 @@ cp -f .pytest.expect ${TEST_SET}
 
 echo "Executing Tests..."
 RERUN_COUNT=${RERUN_COUNT:-1}
-if [ -z ${TEST_BROWSER} ]
+if [ -z ${TEST_BROWSER} ] 
 then
-    echo Test Args $@ ${TEST_SET}
-    pytest $@ ${TEST_SET}
+    echo Test Args $@ --reportportal -o "rp_endpoint=${RP_ENDPOINT}" -o "rp_launch_attributes=${RP_LAUNCH_ATTRIBUTES}" \
+    -o "rp_project=${RP_PROJECT}" -o "rp_launch=${RP_LAUNCH}" -o "rp_launch_description='${RP_LAUNCH_DESC}'" -o "rp_ignore_attributes='xfail' 'usefixture'" \
+    ${TEST_SET}     
+    pytest $@ \
+    --reportportal -o "rp_endpoint=${RP_ENDPOINT}" -o "rp_launch_attributes=${RP_LAUNCH_ATTRIBUTES}" \
+    -o "rp_project=${RP_PROJECT}" -o "rp_launch=${RP_LAUNCH}" -o "rp_launch_description='${RP_LAUNCH_DESC}'" -o "rp_ignore_attributes='xfail' 'usefixture'" \
+    ${TEST_SET} 
     test_exit_code=$?
 else
     # Execute the tests on Headless mode in local if UI_TEST_HEADLESS environment is set to "true"
     if [ "${UI_TEST_HEADLESS}" = "true" ]
     then
-        echo Test Args $@ --local --persist-browser --headless --reruns=${RERUN_COUNT} --browser=${TEST_BROWSER} ${TEST_SET}
-        pytest $@ --local --persist-browser --headless --reruns=${RERUN_COUNT} --browser=${TEST_BROWSER}
+        echo Test Args $@ --local --persist-browser --headless --reruns=${RERUN_COUNT} --browser=${TEST_BROWSER}\
+        --reportportal -o "rp_endpoint=${RP_ENDPOINT}" -o "rp_launch_attributes=${RP_LAUNCH_ATTRIBUTES}" \
+        -o "rp_project=${RP_PROJECT}" -o "rp_launch=${RP_LAUNCH}" -o "rp_launch_description='${RP_LAUNCH_DESC}'" -o "rp_ignore_attributes='xfail' 'usefixture'" \
+        ${TEST_SET} 
+        
+        pytest $@ --local --persist-browser --headless --reruns=${RERUN_COUNT} --browser=${TEST_BROWSER} \
         --reportportal -o "rp_endpoint=${RP_ENDPOINT}" -o "rp_launch_attributes=${RP_LAUNCH_ATTRIBUTES}" \
         -o "rp_project=${RP_PROJECT}" -o "rp_launch=${RP_LAUNCH}" -o "rp_launch_description='${RP_LAUNCH_DESC}'" -o "rp_ignore_attributes='xfail' 'usefixture'" \
         ${TEST_SET}
@@ -47,4 +56,4 @@ else
         test_exit_code=$?
     fi
 fi
-exit "$test_exit_code"
+exit "$test_exit_code" 
