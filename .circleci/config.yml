@@ -249,7 +249,7 @@ jobs:
           command: |
             pip install git+https://github.com/pixelb/crudini        
             mkdir test-results
-            cp -r /tmp/workspace/output output
+            cp -rf /tmp/workspace/* .
       - run:
           name: Splunk Testing
           no_output_timeout: 2h
