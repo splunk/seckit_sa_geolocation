@@ -18,6 +18,7 @@ orbs:
           - run:
               name: Setup Environment
               command: |
+                echo export VERSION=$(./semtag getcurrent) >/tmp/VERSION
                 sudo apt-get update
                 sudo apt-get install -y python2 python-pip python-virtualenv python3 python3.7 python3-pip python3-virtualenv
                 python3.7 -m virtualenv ~/.venv -p python3
@@ -36,7 +37,7 @@ orbs:
                 PACKAGE_ID=$(ls output/)
                 BUILD_DIR=output/$PACKAGE_ID              
                 source ~/.venv/bin/activate
-                echo export VERSION=$(./semtag getcurrent) >$BUILD_DIR/VERSION
+                cp /tmp/VERSION >$BUILD_DIR/VERSION
                 slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
                 cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
                 mkdir -p build/package/splunkbase
