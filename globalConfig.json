@@ -2,7 +2,7 @@
     "meta": {
         "name": "SecKit_SA_geolocation",
         "displayName": "SecKit_SA_geolocation",
-        "version": "5.0.8a97c6e71",
+        "version": "5.0.8a90fb3f4",
         "apiVersion": "3.0.0",
         "restRoot": "SecKit_SA_geolocation",
         "schemaVersion": "0.0.1"

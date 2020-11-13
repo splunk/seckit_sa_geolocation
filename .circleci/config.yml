@@ -520,6 +520,8 @@ workflows:
             tags:
               only: /^v\d*\.\d*\.\d*.*$/
       - publish-sbase:
+          context:
+            - gdi-splunkbase
           requires:
             - package
           filters:
