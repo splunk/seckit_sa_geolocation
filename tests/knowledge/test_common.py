@@ -1,9 +1,6 @@
-# Copyright 2019 Splunk, Inc.
+# SPDX-FileCopyrightText: 2020 Splunk Inc (Ryan Faircloth) <rfaircloth@splunk.com>
 #
-# Use of this source code is governed by a BSD-2-clause-style
-# license that can be found in the LICENSE-BSD2 file or at
-# https://opensource.org/licenses/BSD-2-Clause
-
+# SPDX-License-Identifier: Apache-2.0
 
 
 def test_positive(record_property, splunk_search_util,seckit_input):

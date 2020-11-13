@@ -23,8 +23,8 @@
     },
     "commonInformationModels": null,
     "license": {
-      "name": "license-eula.txt",
-      "text": null,
+      "name": "Apache-2.0",
+      "text": "LICENSES/Apache-2.0.txt",
       "uri": null
     },
     "privacyPolicy": {

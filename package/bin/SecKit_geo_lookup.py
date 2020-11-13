@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# SPDX-FileCopyrightText: 2020 Splunk Inc (Ryan Faircloth) <rfaircloth@splunk.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import import_declare_test
 import os.path
 import csv
