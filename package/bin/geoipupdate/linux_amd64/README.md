@@ -1,7 +1,5 @@
 # GeoIP Update
 
-[![Build Status](https://travis-ci.com/maxmind/geoipupdate.svg?branch=master)](https://travis-ci.com/maxmind/geoipupdate)
-
 The GeoIP Update program performs automatic updates of GeoIP2 and GeoIP Legacy
 binary databases. CSV databases are _not_ supported.
 
@@ -70,7 +68,7 @@ You can also use the tarball.
 
 Download the appropriate .rpm for your system.
 
-Run `rpm -i path/to/geoipupdate_4.0.0_linux_amd64.rpm` (replacing the
+Run `rpm -Uvhi path/to/geoipupdate_4.0.0_linux_amd64.rpm` (replacing the
 version number and architecture as necessary). You will need to be root.
 This will install `geoipupdate` to `/usr/bin/geoipupdate`.
 
@@ -102,6 +100,10 @@ Copy `geoipupdate.exe` to where you want it to live.
 `\ProgramData\MaxMind/GeoIPUpdate\GeoIP.conf` on your system drive by
 default.
 
+### Installing via Docker
+
+Please see our [Docker documentation](doc/docker.md).
+
 ### Installation from source or Git
 
 You need the Go compiler (1.8+). You can get it at the [Go
@@ -109,7 +111,7 @@ website](https://golang.org).
 
 The easiest way is via `go get`:
 
-    $ go get -u github.com/maxmind/geoipupdate/cmd/geoipupdate
+    $ env GO111MODULE=on go get -u github.com/maxmind/geoipupdate/v4/cmd/geoipupdate
 
 This installs `geoipupdate` to `$GOPATH/bin/geoipupdate`.
 
@@ -139,7 +141,7 @@ https://github.com/maxmind/geoipupdate/issues
 
 # Copyright and License
 
-This software is Copyright (c) 2018 - 2019 by MaxMind, Inc.
+This software is Copyright (c) 2018 - 2020 by MaxMind, Inc.
 
 This is free software, licensed under the [Apache License, Version
 2.0](LICENSE-APACHE) or the [MIT License](LICENSE-MIT), at your option.

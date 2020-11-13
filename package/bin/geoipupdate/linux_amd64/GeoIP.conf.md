@@ -15,17 +15,22 @@ sensitive.
 
 ## Required settings:
 
-`EditionIDs`
-
-:   List of database edition IDs. Edition IDs may consist
-    of letters, digits, and dashes (e.g., "GeoIP2-City", "106"). Note: this
-    was formerly called `ProductIds`.
-
-## Optional settings:
-
 `AccountID`
 
 :   Your MaxMind account ID. This was formerly known as `UserId`.
+
+`LicenseKey`
+
+:   Your case-sensitive MaxMind license key.
+
+`EditionIDs`
+
+:   List of space-separated database edition IDs. Edition IDs may consist
+    of letters, digits, and dashes.  For example, `GeoIP2-City 106` would
+    download the GeoIP2 City database (`GeoIP2-City`) and the GeoIP Legacy
+    Country database (`106`). Note: this was formerly called `ProductIds`.
+
+## Optional settings:
 
 `DatabaseDirectory`
 
@@ -53,16 +58,19 @@ sensitive.
 :   Whether to preserve modification times of files downloaded from the
     server. This option is either `0` or `1`. The default is `0`.
 
-`LicenseKey`
-
-:   Your case-sensitive MaxMind license key.
-
 `LockFile`
 
 :   The lock file to use. This ensures only one `geoipupdate` process can run
     at a time. Note: Once created, this lockfile is not removed from the
     filesystem. The default is `.geoipupdate.lock` under the
     `DatabaseDirectory`.
+
+`RetryFor`
+
+:   The amount of time to retry for when errors during HTTP transactions are
+    encountered. It can be specified as a (possibly fractional) decimal number
+    followed by a unit suffix. Valid time units are `ns`, `us` (or `µs`), `ms`,
+    `s`, `m`, `h`. The default is `5m` (5 minutes).
 
 ## Deprecated settings:
 
