@@ -74,14 +74,14 @@ orbs:
           - run:
               name: TAG
               command: |
-                git remote set-url origin https://${${GH_TOKEN}}:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
+                git remote set-url origin https://${GH_USER}:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
                 ./semtag <<parameters.tag_level>>
       merge-to-master:
         steps:
           - run:
               name: Merge
               command: |
-                git remote set-url origin https://${${GH_TOKEN}}:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
+                git remote set-url origin https://${GH_USER}:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
                 git config --global user.email "addonreleasesrv@splunk.com"
                 git config --global user.name "Add on release service"
                 git pull origin master
@@ -100,17 +100,8 @@ orbs:
           - checkout
           - tag:
               tag_level: <<parameters.tag_level>>
-              ${GH_TOKEN}: ${${GH_TOKEN}}
-              gh_token: ${GH_TOKEN}
       merge-to-master:
         executor: python37
-        parameters:
-          ${GH_TOKEN}:
-            description: Git Hub username
-            type: string
-          gh_token:
-            description: Git Hub token
-            type: string
         steps:
           - checkout
           - merge-to-master
