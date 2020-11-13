@@ -67,12 +67,6 @@ orbs:
     commands:
       tag:
         parameters:
-          gh_user:
-            description: Git Hub username
-            type: string
-          gh_token:
-            description: Git Hub token
-            type: string
           tag_level:
             description: Tag level
             type: string
@@ -80,21 +74,14 @@ orbs:
           - run:
               name: TAG
               command: |
-                git remote set-url origin https://<<parameters.gh_user>>:<<parameters.gh_token>>@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
+                git remote set-url origin https://${${GH_TOKEN}}:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
                 ./semtag <<parameters.tag_level>>
       merge-to-master:
-        parameters:
-          gh_user:
-            description: Git Hub username
-            type: string
-          gh_token:
-            description: Git Hub token
-            type: string
         steps:
           - run:
               name: Merge
               command: |
-                git remote set-url origin https://<<parameters.gh_user>>:<<parameters.gh_token>>@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
+                git remote set-url origin https://${${GH_TOKEN}}:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
                 git config --global user.email "addonreleasesrv@splunk.com"
                 git config --global user.name "Add on release service"
                 git pull origin master
@@ -105,12 +92,6 @@ orbs:
     jobs:
       tag:
         parameters:
-          gh_user:
-            description: Git Hub username
-            type: string
-          gh_token:
-            description: Git Hub token
-            type: string
           tag_level:
             description: Tag level
             type: string
@@ -119,12 +100,12 @@ orbs:
           - checkout
           - tag:
               tag_level: <<parameters.tag_level>>
-              gh_user: <<parameters.gh_user>>
-              gh_token: <<parameters.gh_token>>
+              ${GH_TOKEN}: ${${GH_TOKEN}}
+              gh_token: ${GH_TOKEN}
       merge-to-master:
         executor: python37
         parameters:
-          gh_user:
+          ${GH_TOKEN}:
             description: Git Hub username
             type: string
           gh_token:
@@ -132,9 +113,7 @@ orbs:
             type: string
         steps:
           - checkout
-          - merge-to-master:
-              gh_user: <<parameters.gh_user>>
-              gh_token: <<parameters.gh_token>>
+          - merge-to-master
 
 jobs:
   splunk-app-inspect:
@@ -425,9 +404,9 @@ workflows:
               only: /.*/
       - splunk-release/tag:
           name: tag-alpha
+          context:
+            - gdi-github
           tag_level: alpha
-          gh_user: ${GH_USER}
-          gh_token: ${GITHUB_TOKEN}
           filters:
             branches:
               only: develop
@@ -440,9 +419,9 @@ workflows:
               only: develop
       - splunk-release/tag:
           name: tag-beta
+          context:
+            - gdi-github
           tag_level: beta
-          gh_user: ${GH_USER}
-          gh_token: ${GITHUB_TOKEN}
           requires:
             - approval-tag-beta
       - approval-merge-beta-to-master:
@@ -454,8 +433,8 @@ workflows:
               only: develop
       - splunk-release/merge-to-master:
           name: merge-beta-to-master
-          gh_user: ${GH_USER}
-          gh_token: ${GITHUB_TOKEN}
+          context:
+            - gdi-github
           requires:
             - approval-merge-beta-to-master
           filters:
@@ -464,8 +443,8 @@ workflows:
       - splunk-release/tag:
           name: tag-candidate
           tag_level: candidate
-          gh_user: ${GH_USER}
-          gh_token: ${GITHUB_TOKEN}
+          context:
+            - gdi-github
           filters:
             branches:
               only: master
@@ -476,8 +455,8 @@ workflows:
       - splunk-release/tag:
           name: tag-final-major
           tag_level: final -s major
-          gh_user: ${GH_USER}
-          gh_token: ${GITHUB_TOKEN}
+          context:
+            - gdi-github
           requires:
             - approval-tag-final-major
       - approval-tag-final-minor:
@@ -487,8 +466,8 @@ workflows:
       - splunk-release/tag:
           name: tag-final-minor
           tag_level: final -s minor
-          gh_user: ${GH_USER}
-          gh_token: ${GITHUB_TOKEN}
+          context:
+            - gdi-github
           requires:
             - approval-tag-final-minor
       - approval-tag-final-patch:
@@ -498,8 +477,8 @@ workflows:
       - splunk-release/tag:
           name: tag-final-patch
           tag_level: final -s patch
-          gh_user: ${GH_USER}
-          gh_token: ${GITHUB_TOKEN}
+          context:
+            - gdi-github
           requires:
             - approval-tag-final-patch
   publish:
