@@ -37,7 +37,7 @@ orbs:
                 PACKAGE_ID=$(ls output/)
                 BUILD_DIR=output/$PACKAGE_ID              
                 source ~/.venv/bin/activate
-                cp /tmp/VERSION >$BUILD_DIR/VERSION
+                cp /tmp/VERSION $BUILD_DIR/VERSION
                 slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
                 cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
                 mkdir -p build/package/splunkbase
