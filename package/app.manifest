@@ -44,7 +44,7 @@
   "incompatibleApps": null,
   "platformRequirements": {
     "splunk": {
-      "Enterprise": ">=8.0.0"
+      "Enterprise": "*"
     }
   },
   "targetWorkloads": ["_search_heads"]
