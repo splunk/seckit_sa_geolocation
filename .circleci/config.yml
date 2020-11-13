@@ -317,6 +317,7 @@ jobs:
             BUILD_DIR=/tmp/workspace/output/$PACKAGE_ID              
                 
             source ${BUILD_DIR}/VERSION
+            echo $VERSION
             go get -v -u github.com/tcnksm/ghr            
             $HOME/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} -delete ${VERSION} $PACKAGE
 
