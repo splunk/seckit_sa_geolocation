@@ -29,6 +29,7 @@ orbs:
               command: |
                 source ~/.venv/bin/activate
                 ucc-gen
+                echo export VERSION=$(./semtag getcurrent) >build/VERSION
           - run:
               name: Generating package
               command: |
