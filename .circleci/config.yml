@@ -312,7 +312,10 @@ jobs:
           command: |
             PATH=$PATH:/usr/local/go/bin
             PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
-            source /tmp/workspace/build/VERSION
+            PACKAGE_ID=$(ls /tmp/workspace/output/)
+            BUILD_DIR=/tmp/workspace/output/$PACKAGE_ID              
+                
+            source ${BUILD_DIR}/VERSION
             go get -v -u github.com/tcnksm/ghr            
             $HOME/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} -delete ${VERSION} $PACKAGE
 
