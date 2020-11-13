@@ -1,54 +1,79 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Splunk Add On For Juniper
+Upstream-Name: SecKit Addon for Maxmind
 Upstream-Contact: Splunk Inc. <support@splunk.com>
-Source: https://github.com/splunk/splunk-add-on-for-juniper
+Source: https://github.com/splunk/seckit_sa_geolocation
 
 
 Files: deps/*
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
 
 
 Files: package/lookups/*
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
 
 Files: package/static/*
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
 
 Files: package/samples/*
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
 
 Files: package/metadata/*
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
+
+Files: package/metadata/*
+Copyright: $YEAR $NAME <$CONTACT>
+License: Apache-2.0
+
 
 Files: package/app.manifest
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
+
+Files: globalConfig.json
+Copyright: $YEAR $NAME <$CONTACT>
+License: Apache-2.0
 
 Files: package/README.*
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
-
-Files: tests/*
-Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
 
 Files: .*
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
 
 Files: Dockerfile*
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
 
 Files: semtag
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
 
 Files: README.*
 Copyright: $YEAR $NAME <$CONTACT>
-License: LicenseRef-Splunk-1-2020
+License: Apache-2.0
+
+Files: package/README.txt
+Copyright: $YEAR $NAME <$CONTACT>
+License: Apache-2.0
+
+Files: package/README
+Copyright: $YEAR $NAME <$CONTACT>
+License: Apache-2.0
+
+Files: package/default/data/ui/nav/*
+Copyright: $YEAR $NAME <$CONTACT>
+License: Apache-2.0
+
+Files: package/default/data/ui/views/*
+Copyright: $YEAR $NAME <$CONTACT>
+License: Apache-2.0
+
+Files: package/bin/geoipupdate/linux_amd64/*
+Copyright: 2018 - 2020 by MaxMind, Inc.
+License: MIT
