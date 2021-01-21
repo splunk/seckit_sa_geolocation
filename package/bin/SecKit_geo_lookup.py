@@ -63,6 +63,17 @@ def main():
                     result['network'] = ct_response.network
             except geoip2.errors.AddressNotFoundError:
                 donothing = ""
+                
+            try:
+                asn_file = os.path.join(data_path, 'GeoLite2-ASN.mmdb')
+                if (os.path.isfile(asn_file)):
+                    asnreader = geoip2.database.Reader(asn_file)
+                    asn_response = asnreader.asn(result[ipfield])
+                    result['isp_ip'] = isp_response.ip_address
+                    result['isp_asn'] = isp_response.autonomous_system_number
+                    result['isp_asn_organization'] = isp_response.autonomous_system_organization
+            except geoip2.errors.AddressNotFoundError:
+                donothing = ""
 
             try:
                 isp_file = os.path.join(data_path, 'GeoIP2-ISP.mmdb')
