@@ -69,9 +69,9 @@ def main():
                 if (os.path.isfile(asn_file)):
                     asnreader = geoip2.database.Reader(asn_file)
                     asn_response = asnreader.asn(result[ipfield])
-                    result['isp_ip'] = isp_response.ip_address
-                    result['isp_asn'] = isp_response.autonomous_system_number
-                    result['isp_asn_organization'] = isp_response.autonomous_system_organization
+                    result['isp_ip'] = asn_response.ip_address
+                    result['isp_asn'] = asn_response.autonomous_system_number
+                    result['isp_asn_organization'] = asn_response.autonomous_system_organization
             except geoip2.errors.AddressNotFoundError:
                 donothing = ""
 
