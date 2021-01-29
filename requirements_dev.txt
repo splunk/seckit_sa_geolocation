@@ -10,5 +10,5 @@ https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.
 pytest-xdist
 pytest-splunk-addon==1.4.0
 pytest-expect
-pytest-splunk-addon-ui-smartx==1.0.0
+pytest-splunk-addon-ui-smartx==1.1.1
 pytest-rerunfailures
