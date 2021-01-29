@@ -1,0 +1,23 @@
+FROM sameersbn/squid:3.5.27-2
+ARG PROXY_USERNAME=user1
+ARG PROXY_PASSWORD=123456
+RUN apt-get update
+RUN apt-get install -y apache2-utils
+RUN touch /etc/squid/passwords
+RUN chmod 777 /etc/squid/passwords
+RUN htpasswd -b /etc/squid/passwords $PROXY_USERNAME $PROXY_PASSWORD
+RUN mv /etc/squid/squid.conf /etc/squid/squid.conf.original
+RUN echo "auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwords\n"\
+"auth_param basic realm Squid proxy-caching web server\n"\
+"auth_param basic credentialsttl 24 hours\n"\
+"auth_param basic casesensitive off\n"\
+"acl authenticated proxy_auth REQUIRED\n"\
+"http_access allow authenticated\n"\
+"http_access deny all\n"\
+"dns_v4_first on\n"\
+"forwarded_for delete\n"\
+"via off\n"\
+"http_port 3128\n" > /etc/squid/squid.conf
+RUN cat /etc/squid/squid.conf
+RUN service squid start
+RUN service squid restart
