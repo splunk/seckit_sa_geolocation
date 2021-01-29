@@ -7,4 +7,4 @@ lovely-pytest-docker==0.2.0
 pytest==4.6.11
 pytest-xdist==1.34.0
 pytest-expect==1.1.0
-mock==3.0.5
+mock==4.0.3
