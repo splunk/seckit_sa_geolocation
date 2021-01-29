@@ -11,6 +11,8 @@ services:
       - SAUCE_USERNAME=${SAUCE_USERNAME}
       - SAUCE_PASSWORD=${SAUCE_PASSWORD}
       - TEST_SET=${TEST_SET}
+      - TEST_TYPE=${TEST_TYPE}
+      - JOB_NAME=${JOB_NAME}
       - SAUCE_TUNNEL_ID=${SAUCE_IDENTIFIER}
       - SAUCE_TUNNEL_PARENT=none
       - UI_TEST_HEADLESS=${UI_TEST_HEADLESS}
@@ -22,19 +24,24 @@ services:
       - RP_PROJECT=${RP_PROJECT}
       - RP_LAUNCH=${RP_LAUNCH}
       - RP_LAUNCH_DESC=${RP_LAUNCH_DESC}
+      - IMAGE_TAG=${IMAGE_TAG}
     env_file:
       - test_credentials.env
     build:
       context: .
       dockerfile: Dockerfile-tests
+      args:
+        IMAGE_TAG: ${IMAGE_TAG}
     links:
       - splunk
       - sc4s
+      - http_proxy
+      - socks5
     volumes:
       - results:/home/circleci/work
 
   sc4s:
-    image: splunk/scs:latest
+    image: splunk/scs:${SC4S_VERSION}
     hostname: sc4s
     #When this is enabled test_common will fail
     #    command: -det
@@ -47,8 +54,6 @@ services:
       - "6514"
     stdin_open: true
     tty: true
-    links:
-      - splunk
     environment:
       - SPLUNK_HEC_URL=https://splunk:8088
       - SPLUNK_HEC_TOKEN=9b741d03-43e9-4164-908b-e09102327d22
@@ -70,6 +75,18 @@ services:
       - SC4S_ARCHIVE_GLOBAL=no
       - SC4S_LISTEN_CHECKPOINT_SPLUNK_NOISE_CONTROL=yes
 
+  socks5:
+    image: serjs/go-socks5-proxy:latest
+    hostname: socks5
+    ports:
+      - "1080"
+    stdin_open: true
+    tty: true
+    links:
+      - splunk
+    environment:
+      - PROXY_USER=splunk_socks5
+      - PROXY_PASSWORD=splunk_socks5
   splunk:
     build:
       context: .
@@ -88,6 +105,19 @@ services:
       - SPLUNK_PASSWORD=Chang3d!
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_HEC_TOKEN=9b741d03-43e9-4164-908b-e09102327d22
+      - TEST_SET=${TEST_SET}
+      - RP_ENDPOINT=${RP_ENDPOINT}
+      - RP_UUID=${RP_UUID}
+      - RP_LAUNCH_ATTRIBUTES=${RP_LAUNCH_ATTRIBUTES}
+      - RP_PROJECT=${RP_PROJECT}
+      - RP_LAUNCH=${RP_LAUNCH}
+      - RP_LAUNCH_DESC=${RP_LAUNCH_DESC}
+    env_file:
+      - test_credentials.env
+    volumes:
+      - backend_results:/home/circleci/work_backend
+    links:
+      - sc4s
 
   sauceconnect:
     build:
@@ -101,7 +131,21 @@ services:
     hostname: sauceconnect
     ports:
       - "4445"
+  http_proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile-http_proxy
+    hostname: http_proxy
+    ports:
+      - "3128"
+    stdin_open: true
+    environment:
+      - PROXY_USERNAME=user1
+      - PROXY_PASSWORD=123456
+    tty: true
 
 volumes:
   results:
+    external: false
+  backend_results:
     external: false

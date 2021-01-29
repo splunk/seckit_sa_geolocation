@@ -6,19 +6,29 @@
 #
 #You should have received a copy of the CC0 legalcode along with this
 #work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
-FROM circleci/python:3.7-browsers
+ARG IMAGE_TAG=3.7-browsers
+FROM circleci/python:$IMAGE_TAG
 RUN mkdir -p /home/circleci/work/tests
 RUN mkdir -p /home/circleci/work/test-results/functional
 
 COPY tests/entrypoint.sh /
 COPY .pytest.expect /home/circleci/work/.pytest.expect
 COPY requirements_dev.txt /home/circleci/work/
+COPY requirements_py2_dev.txt /home/circleci/work/
+COPY requirements_addon_specific.txt /home/circleci/work/
 COPY tests /home/circleci/work/tests
 RUN cd /home/circleci/work/tests && ls
 
 RUN cd ../..
 COPY package /home/circleci/work/package
+COPY output /home/circleci/work/output
 RUN sudo chown -R circleci /home/circleci/
+
+# Below three lines are added to create specific path required by splunktalib to create log file.
+# Once fix is avalible(ADDON-32060) in splunktalib, remove these lines.
+USER root
+RUN mkdir -p /opt/splunk/var/log/splunk
+RUN chmod -R 777 /opt/splunk/var/log/splunk
 
 USER circleci
 ENTRYPOINT /entrypoint.sh

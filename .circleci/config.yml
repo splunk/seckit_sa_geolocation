@@ -22,19 +22,34 @@ orbs:
                 sudo apt-get install -y python2 python-pip python-virtualenv python3 python3.7 python3-pip python3-virtualenv
                 python3.7 -m virtualenv ~/.venv -p python3
                 source ~/.venv/bin/activate
-                pip install -r requirements_dev.txt || true
+                pip install pip --upgrade
+                pip install -r requirements_dev.txt --use-deprecated=legacy-resolver || true
                 pip install semantic_version==2.6.0
+                sudo apt install npm
           - run:
               name: Generate Addon
               command: |
+                touch nextRelease.txt
+                npx -p @semantic-release/exec -p semantic-release semantic-release --dry-run --plugins "@semantic-release/commit-analyzer,@semantic-release/exec" --analyzeCommits @semantic-release/commit-analyzer --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt'
+                sed -i "s/-develop./develop/g" nextRelease.txt
+                VERSION=$(cat nextRelease.txt)
+                echo VERSION="$VERSION"
+                echo CIRCLE_TAG=$CIRCLE_TAG
                 source ~/.venv/bin/activate
-                ucc-gen
+                if [ -z "$CIRCLE_TAG" ]
+                then
+                  ucc-gen --ta-version="$VERSION"
+                else
+                  CIRCLE_TAG=${CIRCLE_TAG:1}
+                  echo CIRCLE_TAG=$CIRCLE_TAG
+                  ucc-gen --ta-version="$CIRCLE_TAG"
+                fi
           - run:
               name: Generating package
               command: |
                 PACKAGE_ID=$(ls output/)
-                BUILD_DIR=output/$PACKAGE_ID              
-                source ~/.venv/bin/activate                
+                BUILD_DIR=output/$PACKAGE_ID
+                source ~/.venv/bin/activate
                 slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
                 cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
                 mkdir -p build/package/splunkbase
@@ -76,7 +91,7 @@ orbs:
               command: |
                 git remote set-url origin https://${GH_USER}:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
                 ./semtag <<parameters.tag_level>>
-      merge-to-master:
+      merge-to-main:
         steps:
           - run:
               name: Merge
@@ -84,9 +99,9 @@ orbs:
                 git remote set-url origin https://${GH_USER}:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
                 git config --global user.email "addonreleasesrv@splunk.com"
                 git config --global user.name "Add on release service"
-                git pull origin master
-                git merge master -m "Merge from master"
-                git checkout master
+                git pull origin main
+                git merge main -m "Merge from main"
+                git checkout main
                 git merge develop
                 git push
     jobs:
@@ -100,11 +115,11 @@ orbs:
           - checkout
           - tag:
               tag_level: <<parameters.tag_level>>
-      merge-to-master:
+      merge-to-main:
         executor: python37
         steps:
           - checkout
-          - merge-to-master
+          - merge-to-main
 
 jobs:
   splunk-app-inspect:
@@ -203,6 +218,10 @@ jobs:
         description: Test Set
         type: string
         default: knowledge
+      sc4s_version:
+        description: sc4s version
+        type: string
+        default: latest
     docker:
       - image: circleci/python:3.7
     resource_class: xlarge
@@ -220,19 +239,31 @@ jobs:
             pip install git+https://github.com/pixelb/crudini        
             mkdir test-results
             cp -rf /tmp/workspace/* .
+            mkdir -p deps/apps/splunk-add-on-for-modinput-test/output
+            cd deps/apps/splunk-add-on-for-modinput-test/output
+            curl -s https://api.github.com/repos/splunk/splunk-add-on-for-modinput-test/releases/latest | grep "Splunk_TA.*tar.gz" | grep -v search_head | grep -v indexer | grep -v forwarder | cut -d : -f 2,3 | tr -d \" | wget -qi - || true
+            ls
+            tar -xzf *.tar.gz
+            ls
+            rm *.tar.gz
+            ls
       - run:
           name: Splunk Testing
           no_output_timeout: 2h
           command: |
             # Start Splunk
-            TEST_SET=$(echo "<<parameters.test_set>>" | awk -F- '{print $1}' )
+            TEST_TYPE=$(echo "<<parameters.test_set>>" | awk -F- '{print $1}' )
             BROWSER=$(echo "<<parameters.test_set>>" | awk -F- '{print $2}' )
-            [ ! -d "tests/$TEST_SET" ] && exit 0
+            export IMAGE_TAG="3.7-browsers"
+
+            [ ! -d "tests/$TEST_TYPE" ] && exit 0
             [ "$BROWSER" = "safari" ] && [ "$UI_TEST_HEADLESS" = "true" ] && exit 0
             export SPLUNK_VERSION=$(crudini --get deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf "<<parameters.splunk_version>>" VERSION)
+            export SC4S_VERSION=$(crudini --get deps/build/addonfactory_test_matrix_splunk/SC4S_matrix.conf "<<parameters.sc4s_version>>" VERSION)
             export SPLUNK_APP_ID=$(crudini --get package/default/app.conf id name)
             export SPLUNK_APP_PACKAGE=output/$(ls output/)
-            export TEST_SET=tests/$TEST_SET
+            export TEST_SET=tests/$TEST_TYPE
+            export TEST_TYPE=$TEST_TYPE
             export TEST_BROWSER=$BROWSER
             # JOB_NAME: For Saucelabs integration. Used as a build-name.
             export JOB_NAME="CircleCI::$CIRCLE_PROJECT_REPONAME[$CIRCLE_BRANCH][$TEST_BROWSER] #$CIRCLE_BUILD_NUM"
@@ -254,9 +285,10 @@ jobs:
             docker-compose -f docker-compose-ci.yml build
 
             # Saucelab connection
-            [ -z $BROWSER ] || [ "$UI_TEST_HEADLESS" = "true" ] || docker-compose -f docker-compose-ci.yml up -d sauceconnect                
+            [ -z $BROWSER ] || [ "$UI_TEST_HEADLESS" = "true" ] || docker-compose -f docker-compose-ci.yml up -d sauceconnect
+
             # Start Splunk
-            docker-compose -f docker-compose-ci.yml up -d splunk                
+            docker-compose -f docker-compose-ci.yml up -d splunk
             until docker-compose -f docker-compose-ci.yml logs splunk | grep "Ansible playbook complete" ; do sleep 1; done
             # Run a Splunk Diag
             mkdir /tmp/diag
@@ -270,6 +302,7 @@ jobs:
 
             # Normal Inspecting
             [ -z $BROWSER ] || [ "$UI_TEST_HEADLESS" = "true" ] || docker-compose -f docker-compose-ci.yml logs sauceconnect
+            docker-compose -f docker-compose-ci.yml logs sc4s
             docker ps -a
                             
             # Run the tests
@@ -294,6 +327,183 @@ jobs:
           destination: test-results
       - store_test_results:
           path: test-results
+
+  splunk-app-backend-test:
+    parameters:
+      splunk_version:
+        description: Image version
+        type: string
+        default: latest
+      test_set:
+        description: Test Set
+        type: string
+        default: knowledge
+    docker:
+      - image: circleci/python:3.7
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: git submodule sync
+      - run: git submodule update --init
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Setup for testing
+          command: |
+            pip install git+https://github.com/pixelb/crudini        
+            mkdir test-results
+            cp -rf /tmp/workspace/* .
+            mkdir -p deps/apps/splunk-add-on-for-modinput-test/output
+            cd deps/apps/splunk-add-on-for-modinput-test/output
+            curl -s https://api.github.com/repos/splunk/splunk-add-on-for-modinput-test/releases/latest | grep "Splunk_TA.*tar.gz" | grep -v search_head | grep -v indexer | grep -v forwarder | cut -d : -f 2,3 | tr -d \" | wget -qi - || true
+            ls
+            tar -xzf *.tar.gz
+            ls
+            rm *.tar.gz
+            ls
+      - run:
+          name: Splunk Testing
+          no_output_timeout: 2h
+          command: |
+            # Start Splunk
+            TEST_TYPE=$(echo "<<parameters.test_set>>" | awk -F- '{print $1}' )
+            export IMAGE_TAG="3.7-browsers"
+            [ ! -d "tests/$TEST_TYPE" ] && exit 0
+            export SPLUNK_VERSION=$(crudini --get deps/build/addonfactory_test_matrix_splunk/splunk_matrix.conf "<<parameters.splunk_version>>" VERSION)
+            export SPLUNK_APP_ID=$(crudini --get package/default/app.conf id name)
+            export SPLUNK_APP_PACKAGE=output/$(ls output/)
+            export SC4S_VERSION=latest
+            export TEST_SET=tests/$TEST_TYPE
+            export TEST_TYPE=$TEST_TYPE
+            #export env credentials
+            if [ -f ".circleci/testcredentials.sh" ]; then
+                bash ./.circleci/testcredentials.sh
+            fi
+            #Report portal integration
+            export RP_LAUNCH_ATTRIBUTES="'job:${CIRCLE_JOB}' 'deployment:byoe' 'splunkmajor:<< parameters.splunk_version >>' 'splunk:${SPLUNK_VERSION}' 'branch:<< pipeline.git.branch >>' 'commit:${CIRCLE_SHA1}' 'release:${RELEASE}' 'version:$(./semtag getcurrent)' 'test_set:<<parameters.test_set>>' 'repo:${CIRCLE_PROJECT_REPONAME}'"
+            export RP_PROJECT=addonfactory
+            export RP_LAUNCH="$CIRCLE_PROJECT_REPONAME-$(echo <<parameters.test_set>> | sed 's/\(.*\)\(-.*\)/\1/')"
+            export RP_LAUNCH_DESC="ci run"
+            # Build
+            docker-compose -f docker-compose-ci.yml build
+            docker-compose -f docker-compose-ci.yml up -d splunk
+            until docker-compose -f docker-compose-ci.yml logs splunk | grep "Ansible playbook complete" ; do sleep 1; done
+            # Run the tests
+            test_exit_code=0
+            docker-compose -f docker-compose-ci.yml exec --user root splunk bash /home/circleci/work_backend/tests/backend_entrypoint.sh || test_exit_code=$?
+            # Collect Results
+            docker container create --name dummy \
+                                -v project_backend_results:/home/circleci/work_backend \
+                                registry.access.redhat.com/ubi7/ubi
+            docker cp dummy:/home/circleci/work_backend/test-results/test_py2.xml test-results/  || echo "ignoring..."
+            docker cp dummy:/home/circleci/work_backend/test-results/test_py3.xml test-results/  || echo "ignoring..."
+            docker-compose -f docker-compose-ci.yml down || echo "ignoring..."
+            exit "$test_exit_code"
+      - store_artifacts:
+          path: /tmp/diag
+          destination: test-diag
+      - store_artifacts:
+          path: test-results
+          destination: test-results
+      - store_test_results:
+          path: test-results
+
+  splunk-app-unit-test:
+    parameters:
+      test_set:
+        description: Test Set
+        type: string
+        default: py3-3.7.8
+    docker:
+      - image: circleci/python:3.7
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: git submodule sync
+      - run: git submodule update --init
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Setup for testing
+          command: |
+            pip install git+https://github.com/pixelb/crudini        
+            mkdir test-results
+            cp -rf /tmp/workspace/* .
+            mkdir -p deps/apps/splunk-add-on-for-modinput-test/output
+            cd deps/apps/splunk-add-on-for-modinput-test/output
+            curl -s https://api.github.com/repos/splunk/splunk-add-on-for-modinput-test/releases/latest | grep "Splunk_TA.*tar.gz" | grep -v search_head | grep -v indexer | grep -v forwarder | cut -d : -f 2,3 | tr -d \" | wget -qi - || true
+            ls
+            tar -xzf *.tar.gz
+            ls
+            rm *.tar.gz
+            ls
+      - run:
+          name: Splunk Testing
+          no_output_timeout: 2h
+          command: |
+            PYTHON_VERSION=$(echo "<<parameters.test_set>>" | awk -F- '{print $1}' )
+            export IMAGE_TAG=$(echo "<<parameters.test_set>>" | awk -F- '{print $2}' )
+
+            [ ! -d "tests/unit" ] && exit 0
+            export SPLUNK_VERSION=latest
+            export SC4S_VERSION=latest
+            export SPLUNK_APP_ID=$(crudini --get package/default/app.conf id name)
+            export SPLUNK_APP_PACKAGE=output/$(ls output/)
+            export TEST_SET=tests/unit
+            export TEST_TYPE=unit
+
+            #export env credentials
+            if [ -f ".circleci/testcredentials.sh" ]; then
+                bash ./.circleci/testcredentials.sh
+            fi
+
+            #Report portal integration
+            export RP_LAUNCH_ATTRIBUTES="'job:${CIRCLE_JOB}' 'deployment:byoe' 'branch:<< pipeline.git.branch >>' 'commit:${CIRCLE_SHA1}' 'release:${RELEASE}' 'version:$(./semtag getcurrent)' 'test_set:<<parameters.test_set>>' 'repo:${CIRCLE_PROJECT_REPONAME}'"
+            export RP_PROJECT=addonfactory
+
+            export RP_LAUNCH="$CIRCLE_PROJECT_REPONAME-$(echo <<parameters.test_set>> | sed 's/\(.*\)\(-.*\)/\1/')"
+            export RP_LAUNCH_DESC="ci run"
+
+            # Build
+            docker-compose -f docker-compose-ci.yml build test
+
+            docker ps -a
+                            
+            # Run the tests
+            test_exit_code=0
+
+            docker-compose -f docker-compose-ci.yml up --abort-on-container-exit test || test_exit_code=$?
+            # Collect Results
+            docker container create --name dummy \
+                                -v project_results:/home/circleci/work \
+                                registry.access.redhat.com/ubi7/ubi
+            docker cp dummy:/home/circleci/work/test-results/test.xml test-results/  || echo "ignoring..."
+            docker-compose -f docker-compose-ci.yml down || echo "ignoring..."
+            exit "$test_exit_code"
+
+      - store_artifacts:
+          path: test-results
+          destination: test-results
+      - store_test_results:
+          path: test-results
+
+  release:
+    docker:
+      - image: circleci/node:11
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - run:
+          name: "Apply Release Tag"
+          command: |
+            npx semantic-release --plugins "@semantic-release/github" --success @semantic-release/github
 
   publish-gh:
     docker:
@@ -387,92 +597,89 @@ workflows:
           requires:
             - package
           matrix:
+            alias: splunk-app-test-knowledge
             parameters:
-              splunk_version: ["8.0"]
-              test_set:
-                ["knowledge", "ui-firefox", "ui-chrome", "ui-safari", "ui-edge"]
+              splunk_version: ["7.2","8.1"]
+              sc4s_version: ["1"]
+              test_set: ["knowledge"]
           filters:
             branches:
               only: /.*/
-      - splunk-release/tag:
-          name: tag-alpha
+      - splunk-app-test:
           context:
-            - gdi-github
-          tag_level: alpha
+            - gdi-saucelabs
+            - gdi-reportportal
+          requires:
+            - package
+          matrix:
+            alias: splunk-app-test-ui
+            parameters:
+              splunk_version: ["7.2","8.1"]
+              sc4s_version: ["1"]
+              test_set: ["ui-chrome"]
           filters:
             branches:
-              only: develop
-      - approval-tag-beta:
+              only: /.*/
+      - splunk-app-test:
+          context:
+            - gdi-reportportal
           requires:
-            - tag-alpha
+            - package
+          matrix:
+            alias: splunk-app-test-modinput
+            parameters:
+              splunk_version: ["7.2","8.1"]
+              sc4s_version: ["1"]
+              test_set: ["modinput_functional", "modinput_others"]
+          filters:
+            branches:
+              only: /.*/
+      - splunk-app-unit-test:
+          context:
+            - gdi-saucelabs
+            - gdi-reportportal
+          requires:
+            - package
+          matrix:
+            parameters:
+              test_set: ["py2-2.7.17", "py3-3.7.4", "py3-3.7.8"]
+          filters:
+            branches:
+              only: /.*/
+      - splunk-app-backend-test:
+          context:
+            - gdi-reportportal
+          requires:
+            - package
+          matrix:
+            parameters:
+              splunk_version: ["7.2","8.1"]
+              test_set: ["backend"]
+          filters:
+            branches:
+              only: /.*/
+      - approval-release:
+          requires:
+            - package
+            - splunk-app-inspect
+            - splunk-app-test-knowledge
+            - splunk-app-test-ui
+            - splunk-app-test-modinput
+            - splunk-app-unit-test
+            - splunk-app-backend-test
+          context:
+            - gdi-github
           type: approval
           filters:
             branches:
-              only: develop
-      - splunk-release/tag:
-          name: tag-beta
+              only: 
+                - main
+                - develop
+      - release:
+          requires:
+            - approval-release
           context:
             - gdi-github
-          tag_level: beta
-          requires:
-            - approval-tag-beta
-      - approval-merge-beta-to-master:
-          requires:
-            - tag-beta
-          type: approval
-          filters:
-            branches:
-              only: develop
-      - splunk-release/merge-to-master:
-          name: merge-beta-to-master
-          context:
-            - gdi-github
-          requires:
-            - approval-merge-beta-to-master
-          filters:
-            branches:
-              only: develop
-      - splunk-release/tag:
-          name: tag-candidate
-          tag_level: candidate
-          context:
-            - gdi-github
-          filters:
-            branches:
-              only: master
-      - approval-tag-final-major:
-          type: approval
-          requires:
-            - tag-candidate
-      - splunk-release/tag:
-          name: tag-final-major
-          tag_level: final -s major
-          context:
-            - gdi-github
-          requires:
-            - approval-tag-final-major
-      - approval-tag-final-minor:
-          type: approval
-          requires:
-            - tag-candidate
-      - splunk-release/tag:
-          name: tag-final-minor
-          tag_level: final -s minor
-          context:
-            - gdi-github
-          requires:
-            - approval-tag-final-minor
-      - approval-tag-final-patch:
-          type: approval
-          requires:
-            - tag-candidate
-      - splunk-release/tag:
-          name: tag-final-patch
-          tag_level: final -s patch
-          context:
-            - gdi-github
-          requires:
-            - approval-tag-final-patch
   publish:
     jobs:
       - splunk-app-package/package:
