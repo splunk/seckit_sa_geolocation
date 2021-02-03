@@ -599,9 +599,9 @@ workflows:
           matrix:
             alias: splunk-app-test-knowledge
             parameters:
-              splunk_version: ["8.1"]
-              test_set:
-                ["knowledge",  "ui-chrome"]
+              splunk_version: ["7.2","8.1"]
+              sc4s_version: ["1"]
+              test_set: ["knowledge"]
           filters:
             branches:
               only: /.*/
