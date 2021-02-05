@@ -54,6 +54,10 @@ orbs:
                 cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
                 mkdir -p build/package/splunkbase
                 mkdir -p build/package/deployment
+
+                rm -rf $BUILD_DIR/lib/aiohttp/.hash/
+                chmod -R -x+X $BUILD_DIR/lib
+
                 slim package -o build/package/splunkbase $BUILD_DIR 
                 mkdir -p build/package/deployment
                 PACKAGE=$(ls build/package/splunkbase/*)
@@ -599,7 +603,7 @@ workflows:
           matrix:
             alias: splunk-app-test-knowledge
             parameters:
-              splunk_version: ["7.2","8.1"]
+              splunk_version: ["8.0", "8.1"]
               sc4s_version: ["1"]
               test_set: ["knowledge"]
           filters:
@@ -614,7 +618,7 @@ workflows:
           matrix:
             alias: splunk-app-test-ui
             parameters:
-              splunk_version: ["7.2","8.1"]
+              splunk_version: ["8.0", "8.1"]
               sc4s_version: ["1"]
               test_set: ["ui-chrome"]
           filters:
@@ -628,7 +632,7 @@ workflows:
           matrix:
             alias: splunk-app-test-modinput
             parameters:
-              splunk_version: ["7.2","8.1"]
+              splunk_version: ["8.0", "8.1"]
               sc4s_version: ["1"]
               test_set: ["modinput_functional", "modinput_others"]
           filters:
@@ -653,7 +657,7 @@ workflows:
             - package
           matrix:
             parameters:
-              splunk_version: ["7.2","8.1"]
+              splunk_version: ["8.0", "8.1"]
               test_set: ["backend"]
           filters:
             branches:
@@ -672,7 +676,7 @@ workflows:
           type: approval
           filters:
             branches:
-              only: 
+              only:
                 - main
                 - develop
       - release:
