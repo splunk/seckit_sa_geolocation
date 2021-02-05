@@ -1,3 +1,10 @@
+#!/bin/sh
+##
+## SPDX-FileCopyrightText: 2020 Splunk, Inc. <sales@splunk.com>
+## SPDX-License-Identifier: LicenseRef-Splunk-1-2020
+##
+##
+
 if [[ -f /etc/os-release ]]; then
     . /etc/os-release
     export OS=$NAME
