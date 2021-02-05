@@ -603,7 +603,7 @@ workflows:
           matrix:
             alias: splunk-app-test-knowledge
             parameters:
-              splunk_version: ["7.2", "8.1"]
+              splunk_version: ["8.0", "8.1"]
               sc4s_version: ["1"]
               test_set: ["knowledge"]
           filters:
@@ -618,7 +618,7 @@ workflows:
           matrix:
             alias: splunk-app-test-ui
             parameters:
-              splunk_version: ["7.2", "8.1"]
+              splunk_version: ["8.0", "8.1"]
               sc4s_version: ["1"]
               test_set: ["ui-chrome"]
           filters:
@@ -632,7 +632,7 @@ workflows:
           matrix:
             alias: splunk-app-test-modinput
             parameters:
-              splunk_version: ["7.2", "8.1"]
+              splunk_version: ["8.0", "8.1"]
               sc4s_version: ["1"]
               test_set: ["modinput_functional", "modinput_others"]
           filters:
@@ -657,7 +657,7 @@ workflows:
             - package
           matrix:
             parameters:
-              splunk_version: ["7.2", "8.1"]
+              splunk_version: ["8.0", "8.1"]
               test_set: ["backend"]
           filters:
             branches:
