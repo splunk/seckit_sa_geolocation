@@ -2,10 +2,9 @@
   "branches": [
     "+([0-9])?(.{+([0-9]),x}).x",
     "main",
-    "next",
-    "develop",
     {
-      "name": "beta",
+      "name": "develop",
+      "channel": "beta"
       "prerelease": true
     }
   ],
