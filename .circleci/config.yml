@@ -616,6 +616,6 @@ workflows:
 
       - release:
           requires:
-            - package
+            - splunk-app-package
           context:
             - gdi-github
