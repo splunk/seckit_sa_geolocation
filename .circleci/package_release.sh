@@ -1,4 +1,4 @@
-
+#!/usr/bin/env bash
 VERSION=$(echo $1 | sed "s/-develop./develop/g")
 echo VERSION="$VERSION" 
 source ~/.venv/bin/activate 
