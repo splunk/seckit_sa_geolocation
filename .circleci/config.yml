@@ -34,26 +34,7 @@ jobs:
           name: Generate Addon
           command: |
             touch nextRelease.txt
-            npx -p @semantic-release/exec -p semantic-release semantic-release <<parameters.args>> --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt' --prepare --prepareCmd'sed -i "s/-develop./develop/g" nextRelease.txt ;VERSION=$(cat nextRelease.txt) ;echo VERSION="$VERSION" ;echo CIRCLE_TAG=$CIRCLE_TAG ;source ~/.venv/bin/activate ;ucc-gen --ta-version="$VERSION"'
-      - run:
-          name: Generating package
-          command: |
-            PACKAGE_ID=$(ls output/)
-            BUILD_DIR=output/$PACKAGE_ID
-            source ~/.venv/bin/activate
-            slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
-            cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
-            mkdir -p build/package/splunkbase
-            mkdir -p build/package/deployment
-
-            rm -rf $BUILD_DIR/lib/aiohttp/.hash/
-            chmod -R -x+X $BUILD_DIR/lib
-
-            slim package -o build/package/splunkbase $BUILD_DIR 
-            mkdir -p build/package/deployment
-            PACKAGE=$(ls build/package/splunkbase/*)
-            slim partition $PACKAGE -o build/package/deployment/ || true
-            slim validate $PACKAGE
+            npx -p @semantic-release/exec -p semantic-release semantic-release <<parameters.args>> @semantic-release/exec --prepareCmd './.circleci/package_release.sh'
       - persist_to_workspace:
           root: /home/circleci/project
           paths:
