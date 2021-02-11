@@ -507,7 +507,7 @@ jobs:
       - run:
           name: "Apply Release Tag"
           command: |
-            npx semantic-release --plugins "@semantic-release/github" --success @semantic-release/github
+            npx semantic-release
 
   publish-gh:
     docker:
