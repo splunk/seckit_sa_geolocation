@@ -35,11 +35,11 @@ jobs:
           command: |
             touch nextRelease.txt
             npx -p @semantic-release/exec -p semantic-release semantic-release <<parameters.args>> --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt' --prepare '
-              sed -i "s/-develop./develop/g" nextRelease.txt \
-              VERSION=$(cat nextRelease.txt) \
-              echo VERSION="$VERSION" \
-              echo CIRCLE_TAG=$CIRCLE_TAG \
-              source ~/.venv/bin/activate \
+              sed -i "s/-develop./develop/g" nextRelease.txt ;\
+              VERSION=$(cat nextRelease.txt) ;\
+              echo VERSION="$VERSION" ;\
+              echo CIRCLE_TAG=$CIRCLE_TAG ;\
+              source ~/.venv/bin/activate ;\
               ucc-gen --ta-version="$VERSION"'
       - run:
           name: Generating package
