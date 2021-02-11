@@ -679,7 +679,7 @@ workflows:
                 - main
                 - develop
       - release:
-          requires:
-            - approval-release
+          #requires:
+          #  - approval-release
           context:
             - gdi-github
