@@ -34,20 +34,13 @@ jobs:
           name: Generate Addon
           command: |
             touch nextRelease.txt
-            npx -p @semantic-release/exec -p semantic-release semantic-release <<parameters.args>> --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt'
-            sed -i "s/-develop./develop/g" nextRelease.txt
-            VERSION=$(cat nextRelease.txt)
-            echo VERSION="$VERSION"
-            echo CIRCLE_TAG=$CIRCLE_TAG
-            source ~/.venv/bin/activate
-            if [ -z "$CIRCLE_TAG" ]
-            then
-              ucc-gen --ta-version="$VERSION"
-            else
-              CIRCLE_TAG=${CIRCLE_TAG:1}
-              echo CIRCLE_TAG=$CIRCLE_TAG
-              ucc-gen --ta-version="$CIRCLE_TAG"
-            fi
+            npx -p @semantic-release/exec -p semantic-release semantic-release <<parameters.args>> --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt' --prepare '
+              sed -i "s/-develop./develop/g" nextRelease.txt \
+              VERSION=$(cat nextRelease.txt) \
+              echo VERSION="$VERSION" \
+              echo CIRCLE_TAG=$CIRCLE_TAG \
+              source ~/.venv/bin/activate \
+              ucc-gen --ta-version="$VERSION"'
       - run:
           name: Generating package
           command: |
