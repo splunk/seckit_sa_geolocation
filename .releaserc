@@ -4,7 +4,7 @@
     "main",
     {
       "name": "develop",
-      "channel": "beta"
+      "channel": "beta",
       "prerelease": true
     }
   ],
