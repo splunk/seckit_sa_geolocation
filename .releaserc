@@ -12,7 +12,7 @@
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     ["@semantic-release/exec", {
-      "publishCmd": "NEXTVERSION=${nextRelease.version} ./.circleci/package_release.sh"
+      "verifyConditionsCmd": "NEXTVERSION=${nextRelease.version} ./.circleci/package_release.sh"
     }],    
     [
       "@semantic-release/github",
