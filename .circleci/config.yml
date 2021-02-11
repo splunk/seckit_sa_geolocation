@@ -12,6 +12,11 @@ jobs:
   splunk-app-package:
     docker:
       - image: circleci/buildpack-deps:stable
+    parameters:
+      args:
+        description: Release Args
+        type: string
+        default:
     steps:
       - checkout
       - run:
@@ -29,7 +34,7 @@ jobs:
           name: Generate Addon
           command: |
             touch nextRelease.txt
-            npx -p @semantic-release/exec -p semantic-release semantic-release --dry-run --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt'
+            npx -p @semantic-release/exec -p semantic-release semantic-release <<parameters.args>> --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt'
             sed -i "s/-develop./develop/g" nextRelease.txt
             VERSION=$(cat nextRelease.txt)
             echo VERSION="$VERSION"
@@ -529,6 +534,10 @@ workflows:
             branches:
               only: /.*/
       - splunk-app-package:
+          matrix:
+            parameters:
+              args: ["--dry-run"]
+          name: package
           context:
             - gdi-github
           filters:
@@ -544,13 +553,13 @@ workflows:
             branches:
               only: /.*/
           requires:
-            - splunk-app-package
+            - package
       - splunk-app-test:
           context:
             - gdi-saucelabs
             - gdi-reportportal
           requires:
-            - splunk-app-package
+            - package
           matrix:
             alias: splunk-app-test-knowledge
             parameters:
@@ -565,7 +574,7 @@ workflows:
             - gdi-saucelabs
             - gdi-reportportal
           requires:
-            - splunk-app-package
+            - package
           matrix:
             alias: splunk-app-test-ui
             parameters:
@@ -579,7 +588,7 @@ workflows:
           context:
             - gdi-reportportal
           requires:
-            - splunk-app-package
+            - package
           matrix:
             alias: splunk-app-test-modinput
             parameters:
@@ -594,7 +603,7 @@ workflows:
             - gdi-saucelabs
             - gdi-reportportal
           requires:
-            - splunk-app-package
+            - package
           matrix:
             parameters:
               test_set: ["py2-2.7.17", "py3-3.7.4", "py3-3.7.8"]
@@ -605,7 +614,7 @@ workflows:
           context:
             - gdi-reportportal
           requires:
-            - splunk-app-package
+            - package
           matrix:
             parameters:
               splunk_version: ["8.0", "8.1"]
@@ -614,8 +623,13 @@ workflows:
             branches:
               only: /.*/
 
-      - release:
-          requires:
-            - splunk-app-package
+      - splunk-app-package:
+          matrix:
+            parameters:
+              args: [""]
+          name: release
           context:
             - gdi-github
+          filters:
+            branches:
+              only: /.*/
