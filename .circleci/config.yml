@@ -30,7 +30,7 @@ jobs:
             pip install -r requirements_dev.txt --use-deprecated=legacy-resolver || true
             pip install semantic_version==2.6.0
             sudo apt install npm
-            
+
       - run:
           name: Generate Addon
           command: |
@@ -505,7 +505,7 @@ workflows:
       - splunk-app-package:
           matrix:
             parameters:
-              args: ["--dryrun"]
+              args: [""]
           name: package
           context:
             - gdi-github
