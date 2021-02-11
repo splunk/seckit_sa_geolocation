@@ -10,7 +10,7 @@ orbs:
   splunk-app-package:
     jobs:
       package:
-        docker:SP
+        docker:
           - image: circleci/buildpack-deps:stable
         resource_class: large
         steps:
