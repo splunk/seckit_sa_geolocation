@@ -50,7 +50,7 @@ jobs:
       - store_artifacts:
           path: build/VERSION
           destination: build-version
-splunk-app-release:
+  splunk-app-release:
     docker:
       - image: circleci/buildpack-deps:stable
     parameters:
