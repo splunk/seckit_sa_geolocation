@@ -34,7 +34,7 @@ jobs:
           name: Generate Addon
           command: |
             touch nextRelease.txt
-            npx -p @semantic-release/exec -p semantic-release semantic-release <<parameters.args>> --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt' --prepare '
+            npx -p @semantic-release/exec -p semantic-release semantic-release <<parameters.args>> --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt' --prepare '\
               sed -i "s/-develop./develop/g" nextRelease.txt ;\
               VERSION=$(cat nextRelease.txt) ;\
               echo VERSION="$VERSION" ;\
