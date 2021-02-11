@@ -620,6 +620,8 @@ workflows:
           matrix:
             parameters:
               args: [""]
+          requires:
+            - package
           name: release
           context:
             - gdi-github
