@@ -504,7 +504,7 @@ workflows:
       - splunk-app-package:
           matrix:
             parameters:
-              args: ["--prepare"]
+              args: ["--dryrun"]
           name: package
           context:
             - gdi-github
