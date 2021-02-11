@@ -544,13 +544,13 @@ workflows:
             branches:
               only: /.*/
           requires:
-            - package
+            - splunk-app-package
       - splunk-app-test:
           context:
             - gdi-saucelabs
             - gdi-reportportal
           requires:
-            - package
+            - splunk-app-package
           matrix:
             alias: splunk-app-test-knowledge
             parameters:
@@ -565,7 +565,7 @@ workflows:
             - gdi-saucelabs
             - gdi-reportportal
           requires:
-            - package
+            - splunk-app-package
           matrix:
             alias: splunk-app-test-ui
             parameters:
@@ -579,7 +579,7 @@ workflows:
           context:
             - gdi-reportportal
           requires:
-            - package
+            - splunk-app-package
           matrix:
             alias: splunk-app-test-modinput
             parameters:
@@ -594,7 +594,7 @@ workflows:
             - gdi-saucelabs
             - gdi-reportportal
           requires:
-            - package
+            - splunk-app-package
           matrix:
             parameters:
               test_set: ["py2-2.7.17", "py3-3.7.4", "py3-3.7.8"]
@@ -605,7 +605,7 @@ workflows:
           context:
             - gdi-reportportal
           requires:
-            - package
+            - splunk-app-package
           matrix:
             parameters:
               splunk_version: ["8.0", "8.1"]
