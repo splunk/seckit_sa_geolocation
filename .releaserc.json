@@ -16,7 +16,7 @@
     [
       "@semantic-release/exec",
       {
-        "verifyConditionsCmd": ".circleci/package_release.sh ${nextRelease.version}"
+        "publishCmd": ".circleci/package_release.sh ${nextRelease.version}"
       }
     ]
   ]
