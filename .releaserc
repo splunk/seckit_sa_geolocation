@@ -18,8 +18,8 @@
       "@semantic-release/github",
       {
         "assets": [
-          "/tmp/workspace/build/package/splunkbase/**",
-          "/tmp/workspace/build/package/deployment/**"
+          "build/package/splunkbase/**",
+          "build/package/deployment/**"
         ]
       }
     ]
