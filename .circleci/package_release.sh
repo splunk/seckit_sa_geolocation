@@ -1,5 +1,5 @@
 
-VERSION=$(echo $NEXTVERSION | sed "s/-develop./develop/g")
+VERSION=$(echo $1 | sed "s/-develop./develop/g")
 echo VERSION="$VERSION" 
 source ~/.venv/bin/activate 
 ucc-gen --ta-version="$VERSION"
