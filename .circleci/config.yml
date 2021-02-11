@@ -50,7 +50,48 @@ jobs:
       - store_artifacts:
           path: build/VERSION
           destination: build-version
+splunk-app-release:
+    docker:
+      - image: circleci/buildpack-deps:stable
+    parameters:
+      args:
+        description: Release Args
+        type: string
+        default:
+    steps:
+      - checkout
+      - run:
+          name: Setup Environment
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y python2 python-pip python-virtualenv python3 python3.7 python3-pip python3-virtualenv
+            python3.7 -m virtualenv ~/.venv -p python3
+            source ~/.venv/bin/activate
+            pip install pip --upgrade
+            pip install -r requirements_dev.txt --use-deprecated=legacy-resolver || true
+            pip install semantic_version==2.6.0
+            sudo apt install npm
 
+      - run:
+          name: Generate Addon
+          command: |
+            touch nextRelease.txt
+            cp -f .publishrc.json .releaserc.json
+            npx -p @semantic-release/exec -p semantic-release semantic-release <<parameters.args>>
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+            - output
+            - build
+      - store_artifacts:
+          path: build/package/splunkbase
+          destination: build-package-splunkbase
+      - store_artifacts:
+          path: build/package/deployment
+          destination: build-package-deployment
+      - store_artifacts:
+          path: build/VERSION
+          destination: build-version
   splunk-app-inspect:
     parameters:
       options:
@@ -592,7 +633,7 @@ workflows:
             branches:
               only: /.*/
 
-      - splunk-app-package:
+      - splunk-app-release:
           matrix:
             parameters:
               args: [""]

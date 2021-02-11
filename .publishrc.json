@@ -2,6 +2,7 @@
   "branches": [
     "+([0-9])?(.{+([0-9]),x}).x",
     "main",
+    "next",
     {
       "name": "develop",
       "channel": "beta",
@@ -11,16 +12,10 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    ["@semantic-release/exec", {
-      "verifyConditionsCmd": ".circleci/package_release.sh ${nextRelease.version}"
-    }],    
     [
-      "@semantic-release/github",
+      "@semantic-release/exec",
       {
-        "assets": [
-          "package/splunkbase/**",
-          "package/deployment/**"
-        ]
+        "prepareCmd": ".circleci/package_release.sh ${nextRelease.version}"
       }
     ]
   ]
