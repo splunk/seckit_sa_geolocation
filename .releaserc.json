@@ -24,7 +24,8 @@
         "assets": [
           "build/package/splunkbase/**",
           "build/package/deployment/**"
-        ]
+        ],
+        "addReleases": true
       }
     ],
     [
