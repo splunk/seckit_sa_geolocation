@@ -16,8 +16,8 @@
       "@semantic-release/github",
       {
         "assets": [
-          "package/splunkbase/**",
-          "package/deployment/**"
+          "build/package/splunkbase/**",
+          "build/package/deployment/**"
         ]
       }
     ],
