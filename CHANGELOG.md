@@ -1,3 +1,10 @@
+## [6.0.9-develop.5](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.4...v6.0.9-develop.5) (2021-02-12)
+
+
+### Bug Fixes
+
+* timeout ([e42986a](https://github.com/splunk/seckit_sa_geolocation/commit/e42986acb15a4318fe42728434ac7a6dbc34b918))
+
 ## [6.0.9-develop.4](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.3...v6.0.9-develop.4) (2021-02-12)
 
 
