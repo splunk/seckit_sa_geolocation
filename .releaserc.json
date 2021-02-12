@@ -25,7 +25,7 @@
           "build/package/splunkbase/**",
           "build/package/deployment/**"
         ],
-        "addReleases": true
+        "addReleases": "top"
       }
     ],
     [
