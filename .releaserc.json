@@ -13,6 +13,15 @@
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
+      "@semantic-release/github",
+      {
+        "assets": [
+          "package/splunkbase/**",
+          "package/deployment/**"
+        ]
+      }
+    ],
+    [
       "@semantic-release/exec",
       {
         "prepareCmd": ".circleci/package_release.sh ${nextRelease.version}"
