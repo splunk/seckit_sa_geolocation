@@ -7,125 +7,89 @@
 version: 2.1
 orbs:
   go: circleci/go@0.2.0
-  splunk-app-package:
-    jobs:
-      package:
-        docker:
-          - image: circleci/buildpack-deps:stable
-        resource_class: large
-        steps:
-          - checkout
-          - run:
-              name: Setup Environment
-              command: |
-                sudo apt-get update
-                sudo apt-get install -y python2 python-pip python-virtualenv python3 python3.7 python3-pip python3-virtualenv
-                python3.7 -m virtualenv ~/.venv -p python3
-                source ~/.venv/bin/activate
-                pip install pip --upgrade
-                pip install -r requirements_dev.txt --use-deprecated=legacy-resolver || true
-                pip install semantic_version==2.6.0
-                sudo apt install npm
-          - run:
-              name: Generate Addon
-              command: |
-                touch nextRelease.txt
-                npx -p @semantic-release/exec -p semantic-release semantic-release --dry-run --plugins "@semantic-release/commit-analyzer,@semantic-release/exec" --analyzeCommits @semantic-release/commit-analyzer --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt'
-                sed -i "s/-develop./develop/g" nextRelease.txt
-                VERSION=$(cat nextRelease.txt)
-                echo VERSION="$VERSION"
-                echo CIRCLE_TAG=$CIRCLE_TAG
-                source ~/.venv/bin/activate
-                if [ -z "$CIRCLE_TAG" ]
-                then
-                  ucc-gen --ta-version="$VERSION"
-                else
-                  CIRCLE_TAG=${CIRCLE_TAG:1}
-                  echo CIRCLE_TAG=$CIRCLE_TAG
-                  ucc-gen --ta-version="$CIRCLE_TAG"
-                fi
-          - run:
-              name: Generating package
-              command: |
-                PACKAGE_ID=$(ls output/)
-                BUILD_DIR=output/$PACKAGE_ID
-                source ~/.venv/bin/activate
-                slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
-                cp  /tmp/app.manifest  $BUILD_DIR/app.manifest
-                mkdir -p build/package/splunkbase
-                mkdir -p build/package/deployment
-
-                rm -rf $BUILD_DIR/lib/aiohttp/.hash/
-                chmod -R -x+X $BUILD_DIR/lib
-
-                slim package -o build/package/splunkbase $BUILD_DIR 
-                mkdir -p build/package/deployment
-                PACKAGE=$(ls build/package/splunkbase/*)
-                slim partition $PACKAGE -o build/package/deployment/ || true
-                slim validate $PACKAGE
-          - persist_to_workspace:
-              root: /home/circleci/project
-              paths:
-                - output
-                - build
-          - store_artifacts:
-              path: build/package/splunkbase
-              destination: build-package-splunkbase
-          - store_artifacts:
-              path: build/package/deployment
-              destination: build-package-deployment
-          - store_artifacts:
-              path: build/VERSION
-              destination: build-version
-
-  splunk-release:
-    executors:
-      python37:
-        docker:
-          - image: circleci/python:3.7
-    commands:
-      tag:
-        parameters:
-          tag_level:
-            description: Tag level
-            type: string
-        steps:
-          - run:
-              name: TAG
-              command: |
-                git remote set-url origin https://${GH_USER}:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
-                ./semtag <<parameters.tag_level>>
-      merge-to-main:
-        steps:
-          - run:
-              name: Merge
-              command: |
-                git remote set-url origin https://${GH_USER}:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
-                git config --global user.email "addonreleasesrv@splunk.com"
-                git config --global user.name "Add on release service"
-                git pull origin main
-                git merge main -m "Merge from main"
-                git checkout main
-                git merge develop
-                git push
-    jobs:
-      tag:
-        parameters:
-          tag_level:
-            description: Tag level
-            type: string
-        executor: python37
-        steps:
-          - checkout
-          - tag:
-              tag_level: <<parameters.tag_level>>
-      merge-to-main:
-        executor: python37
-        steps:
-          - checkout
-          - merge-to-main
 
 jobs:
+  splunk-app-package:
+    docker:
+      - image: circleci/buildpack-deps:stable
+    parameters:
+      args:
+        description: Release Args
+        type: string
+        default:
+    steps:
+      - checkout
+      - run:
+          name: Setup Environment
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y python2 python-pip python-virtualenv python3 python3.7 python3-pip python3-virtualenv
+            python3.7 -m virtualenv ~/.venv -p python3
+            source ~/.venv/bin/activate
+            pip install pip --upgrade
+            pip install -r requirements_dev.txt --use-deprecated=legacy-resolver || true
+            pip install semantic_version==2.6.0
+            sudo apt install npm
+      - run:
+          name: Generate Addon
+          command: |
+            touch nextRelease.txt
+            npx -p @semantic-release/exec -p @semantic-release/changelog -p @semantic-release/git -p semantic-release semantic-release --verifyReleaseCmd '.circleci/package_release.sh ${nextRelease.version}' --dry-run
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+            - output
+            - build
+      - store_artifacts:
+          path: build/package/splunkbase
+          destination: build-package-splunkbase
+      - store_artifacts:
+          path: build/package/deployment
+          destination: build-package-deployment
+      - store_artifacts:
+          path: build/VERSION
+          destination: build-version
+  splunk-app-release:
+    docker:
+      - image: circleci/buildpack-deps:stable
+    parameters:
+      args:
+        description: Release Args
+        type: string
+        default:
+    steps:
+      - checkout
+      - run:
+          name: Setup Environment
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y python2 python-pip python-virtualenv python3 python3.7 python3-pip python3-virtualenv
+            python3.7 -m virtualenv ~/.venv -p python3
+            source ~/.venv/bin/activate
+            pip install pip --upgrade
+            pip install -r requirements_dev.txt --use-deprecated=legacy-resolver || true
+            pip install semantic_version==2.6.0
+            sudo apt install npm
+
+      - run:
+          name: Generate Addon
+          command: |
+            touch nextRelease.txt
+            npx -p @semantic-release/exec -p @semantic-release/changelog -p @semantic-release/git -p semantic-release semantic-release
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+            - output
+            - build
+      - store_artifacts:
+          path: build/package/splunkbase
+          destination: build-package-splunkbase
+      - store_artifacts:
+          path: build/package/deployment
+          destination: build-package-deployment
+      - store_artifacts:
+          path: build/VERSION
+          destination: build-version
   splunk-app-inspect:
     parameters:
       options:
@@ -497,7 +461,7 @@ jobs:
 
   release:
     docker:
-      - image: circleci/node:11
+      - image: circleci/node:12
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
@@ -507,7 +471,7 @@ jobs:
       - run:
           name: "Apply Release Tag"
           command: |
-            npx semantic-release --plugins "@semantic-release/github" --success @semantic-release/github
+            npx semantic-release
 
   publish-gh:
     docker:
@@ -577,8 +541,13 @@ workflows:
           filters:
             branches:
               only: /.*/
-      - splunk-app-package/package:
+      - splunk-app-package:
+          matrix:
+            parameters:
+              args: [""]
           name: package
+          context:
+            - gdi-github
           filters:
             branches:
               only: /.*/
@@ -661,54 +630,16 @@ workflows:
           filters:
             branches:
               only: /.*/
-      - approval-release:
+
+      - splunk-app-release:
+          matrix:
+            parameters:
+              args: [""]
           requires:
             - package
-            - splunk-app-inspect
-            - splunk-app-test-knowledge
-            - splunk-app-test-ui
-            - splunk-app-test-modinput
-            - splunk-app-unit-test
-            - splunk-app-backend-test
+          name: release
           context:
             - gdi-github
-          type: approval
           filters:
             branches:
-              only:
-                - main
-                - develop
-      - release:
-          requires:
-            - approval-release
-          context:
-            - gdi-github
-  publish:
-    jobs:
-      - splunk-app-package/package:
-          name: package
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v\d*\.\d*\.\d*.*$/
-      - publish-gh:
-          context:
-            - gdi-github
-          requires:
-            - package
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v\d*\.\d*\.\d*.*$/
-      - publish-sbase:
-          context:
-            - gdi-splunkbase
-          requires:
-            - package
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v\d*\.\d*\.\d*.*$/
+              only: /.*/
