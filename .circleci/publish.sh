@@ -3,9 +3,9 @@ source .splunkbase
 source ~/.venv/bin/activate
 PACKAGE=$(ls build/package/splunkbase/*)
 PACKAGE_ID=$(crudini --get package/default/app.conf id name)
-SPLUNKBASE_VERSION=$(echo $1 | sed 's/v//')
-SPLUNKBASE_VERSION=$(echo $SPLUNKBASE_VERSION | sed "s/-develop./develop/g")
 [[ $1 =~ ^v[0-9]*.[0-9]*.[0-9]*$ ]] || export ISPRE=-prerelease
+SPLUNKBASE_VERSION=$(echo $SPLUNKBAS1E_VERSION | sed 's/v//' | sed 's/-develop./develop/g')
+echo publish $SPLUNKBASE_VERSION
 [ "${ISPRE}" == "-prerelease" ] && SPLUNKBASE_VIS="false" || SPLUNKBASE_VIS="true"
 echo uploading package
 BASE=https://splunkbase.splunk.com/api/v0.1/app/${SPLUNKBASE_ID}/release/
@@ -27,7 +27,7 @@ echo $BASE
         | jq )
 
     NOTES=$(cat CHANGELOG.md | jq -sR)
-    NEW=$(echo $CURRENT | jq ".public = true | .release_notes = $NOTES" | jq -c)
+    NEW=$(echo $CURRENT | jq ".release_notes = $NOTES" | jq -c)
     curl -u ${SPLUNKBASE_USERNAME}:${SPLUNKBASE_PASSWORD} \
         --location \
         --request PUT $BASE${ITEM}/ \
