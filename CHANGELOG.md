@@ -1,3 +1,10 @@
+## [6.0.9-develop.1](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.8...v6.0.9-develop.1) (2021-02-12)
+
+
+### Bug Fixes
+
+* Publish Release notes ([fafe1bf](https://github.com/splunk/seckit_sa_geolocation/commit/fafe1bf29893ac9542f0016220fe39fb0e40e902))
+
 ## [6.0.8](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.7...v6.0.8) (2021-02-12)
 
 
