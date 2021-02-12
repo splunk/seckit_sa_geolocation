@@ -1,3 +1,10 @@
+## [6.0.9-develop.3](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.2...v6.0.9-develop.3) (2021-02-12)
+
+
+### Bug Fixes
+
+* shebang ([61b73c5](https://github.com/splunk/seckit_sa_geolocation/commit/61b73c53c3f1012ad1cf3f642977cf54304c6d37))
+
 ## [6.0.9-develop.2](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.1...v6.0.9-develop.2) (2021-02-12)
 
 
