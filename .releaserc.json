@@ -39,7 +39,8 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": ".circleci/package_release.sh ${nextRelease.version}"
+        "prepareCmd": ".circleci/package_release.sh ${nextRelease.version}",
+        "publishCmd": ".circleci/publish.sh ${nextRelease.version}"
       }
     ]
   ]

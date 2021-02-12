@@ -473,25 +473,6 @@ jobs:
           command: |
             npx semantic-release
 
-  publish-gh:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - go/install
-      - run:
-          name: "Publish on GitHub"
-          command: |
-            PATH=$PATH:/usr/local/go/bin
-            go get -v -u github.com/tcnksm/ghr            
-            [[ << pipeline.git.tag >> =~ ^v[0-9]*.[0-9]*.[0-9]*$ ]] || export ISPRE=-prerelease
-            $HOME/go/bin/ghr -t ${GH_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} -delete "<< pipeline.git.tag >>" /tmp/workspace/build/package/splunkbase
-            $HOME/go/bin/ghr -t ${GH_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${ISPRE} "<< pipeline.git.tag >>" /tmp/workspace/build/package/deployment
-
   publish-sbase:
     docker:
       - image: circleci/python:3.7
