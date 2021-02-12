@@ -4,7 +4,7 @@ source ~/.venv/bin/activate
 PACKAGE=$(ls build/package/splunkbase/*)
 PACKAGE_ID=$(crudini --get package/default/app.conf id name)
 [[ $1 =~ ^v[0-9]*.[0-9]*.[0-9]*$ ]] || export ISPRE=-prerelease
-SPLUNKBASE_VERSION=$(echo $1 | sed 's/v//' | sed 's/-develop./develop/g')
+SPLUNKBASE_VERSION=$(echo $1 | sed 's/^v//' | sed 's/-develop./develop/g')
 echo publish $SPLUNKBASE_VERSION
 [ "${ISPRE}" == "-prerelease" ] && SPLUNKBASE_VIS="false" || SPLUNKBASE_VIS="true"
 echo uploading package
