@@ -1,3 +1,10 @@
+## [6.0.9-develop.4](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.3...v6.0.9-develop.4) (2021-02-12)
+
+
+### Bug Fixes
+
+* venv ([bf30852](https://github.com/splunk/seckit_sa_geolocation/commit/bf30852eecbceabc50c14b11639008f421fcf3e6))
+
 ## [6.0.9-develop.3](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.2...v6.0.9-develop.3) (2021-02-12)
 
 
