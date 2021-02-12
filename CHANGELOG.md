@@ -1,3 +1,10 @@
+## [6.0.9-develop.2](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.1...v6.0.9-develop.2) (2021-02-12)
+
+
+### Bug Fixes
+
+* missing crud ini ([393e5bc](https://github.com/splunk/seckit_sa_geolocation/commit/393e5bcda04e94523ff6e8b06d59a799950db628))
+
 ## [6.0.9-develop.1](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.8...v6.0.9-develop.1) (2021-02-12)
 
 
