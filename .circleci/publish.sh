@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-source ~/.venv/bin/activate
 source .splunkbase 
+source ~/.venv/bin/activate
 PACKAGE=$(ls build/package/splunkbase/*)
 PACKAGE_ID=$(crudini --get package/default/app.conf id name)
 SPLUNKBASE_VERSION=$(echo $1 | sed 's/v//')
@@ -15,7 +15,7 @@ echo $BASE
         -F "files[]=@${PACKAGE}" -F "filename=${PACKAGE_ID}.spl" \
         -F "splunk_versions=${SPLUNKBASE_SPLUNK_VERSION}" \
         -F "visibility=${SPLUNKBASE_VIS}"
-
+    sleep 30
     ITEM=$(curl -u ${SPLUNKBASE_USERNAME}:${SPLUNKBASE_PASSWORD} \
         --request GET $BASE \
         | jq ".[] | select(.name==\"$SPLUNKBASE_VERSION\") | .id")
