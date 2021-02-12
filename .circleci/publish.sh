@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source ~/.venv/bin/activate
 source .splunkbase 
 PACKAGE=$(ls build/package/splunkbase/*)
 PACKAGE_ID=$(crudini --get package/default/app.conf id name)
