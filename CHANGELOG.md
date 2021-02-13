@@ -1,3 +1,38 @@
+## [6.0.9-develop.5](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.4...v6.0.9-develop.5) (2021-02-12)
+
+
+### Bug Fixes
+
+* timeout ([e42986a](https://github.com/splunk/seckit_sa_geolocation/commit/e42986acb15a4318fe42728434ac7a6dbc34b918))
+
+## [6.0.9-develop.4](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.3...v6.0.9-develop.4) (2021-02-12)
+
+
+### Bug Fixes
+
+* venv ([bf30852](https://github.com/splunk/seckit_sa_geolocation/commit/bf30852eecbceabc50c14b11639008f421fcf3e6))
+
+## [6.0.9-develop.3](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.2...v6.0.9-develop.3) (2021-02-12)
+
+
+### Bug Fixes
+
+* shebang ([61b73c5](https://github.com/splunk/seckit_sa_geolocation/commit/61b73c53c3f1012ad1cf3f642977cf54304c6d37))
+
+## [6.0.9-develop.2](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.9-develop.1...v6.0.9-develop.2) (2021-02-12)
+
+
+### Bug Fixes
+
+* missing crud ini ([393e5bc](https://github.com/splunk/seckit_sa_geolocation/commit/393e5bcda04e94523ff6e8b06d59a799950db628))
+
+## [6.0.9-develop.1](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.8...v6.0.9-develop.1) (2021-02-12)
+
+
+### Bug Fixes
+
+* Publish Release notes ([fafe1bf](https://github.com/splunk/seckit_sa_geolocation/commit/fafe1bf29893ac9542f0016220fe39fb0e40e902))
+
 ## [6.0.8](https://github.com/splunk/seckit_sa_geolocation/compare/v6.0.7...v6.0.8) (2021-02-12)
 
 
