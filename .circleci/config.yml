@@ -33,6 +33,7 @@ jobs:
       - run:
           name: Generate Addon
           command: |
+            echo VERSION=0.0.0B$CIRCLE_BUILD_NUM>build/VERSION
             .circleci/package_release.sh 0.0.0B$CIRCLE_BUILD_NUM
       - persist_to_workspace:
           root: /home/circleci/project
@@ -45,6 +46,9 @@ jobs:
       - store_artifacts:
           path: build/package/deployment
           destination: build-package-deployment
+      - store_artifacts:
+          path: build/VERSION
+          destination: build
   splunk-app-release:
     docker:
       - image: circleci/buildpack-deps:stable
@@ -119,7 +123,7 @@ jobs:
           name: report
           command: |
             source ~/.venv/bin/activate
-            export VERSION=$(./semtag getfinal)
+            source /tmp/workspace/build/VERSION
             [ "${VERSION}" == "<< pipeline.git.tag >>" ] && export RELEASE=<< pipeline.git.tag >> || export RELEASE=${VERSION}-post            
             cat test-results/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml | sed 's/<skipped\/>//g' | sed 's/skipped[^ ]*/skipped=\"0\"/g' >/tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml
             zip -j /tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.zip /tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml
@@ -148,7 +152,7 @@ jobs:
                         \"value\": \"${RELEASE}\"
                         },
                         { \"key\": \"version\",
-                        \"value\": \"$(./semtag getcurrent)\"
+                        \"value\": \"$VERSION\"
                         },
                         { \"key\": \"repo\",
                         \"value\": \"$CIRCLE_PROJECT_REPONAME\"
@@ -237,7 +241,7 @@ jobs:
             fi
 
             #Report portal integration
-            export RP_LAUNCH_ATTRIBUTES="'job:${CIRCLE_JOB}' 'deployment:byoe' 'splunkmajor:<< parameters.splunk_version >>' 'splunk:${SPLUNK_VERSION}' 'branch:<< pipeline.git.branch >>' 'commit:${CIRCLE_SHA1}' 'release:${RELEASE}' 'version:$(./semtag getcurrent)' 'test_set:<<parameters.test_set>>' 'repo:${CIRCLE_PROJECT_REPONAME}'"
+            export RP_LAUNCH_ATTRIBUTES="'job:${CIRCLE_JOB}' 'deployment:byoe' 'splunkmajor:<< parameters.splunk_version >>' 'splunk:${SPLUNK_VERSION}' 'branch:<< pipeline.git.branch >>' 'commit:${CIRCLE_SHA1}' 'release:${RELEASE}' 'version:$VERSION' 'test_set:<<parameters.test_set>>' 'repo:${CIRCLE_PROJECT_REPONAME}'"
             export RP_PROJECT=addonfactory
 
             export RP_LAUNCH="$CIRCLE_PROJECT_REPONAME-$(echo <<parameters.test_set>> | sed 's/\(.*\)\(-.*\)/\1/')"
@@ -344,7 +348,7 @@ jobs:
                 bash ./.circleci/testcredentials.sh
             fi
             #Report portal integration
-            export RP_LAUNCH_ATTRIBUTES="'job:${CIRCLE_JOB}' 'deployment:byoe' 'splunkmajor:<< parameters.splunk_version >>' 'splunk:${SPLUNK_VERSION}' 'branch:<< pipeline.git.branch >>' 'commit:${CIRCLE_SHA1}' 'release:${RELEASE}' 'version:$(./semtag getcurrent)' 'test_set:<<parameters.test_set>>' 'repo:${CIRCLE_PROJECT_REPONAME}'"
+            export RP_LAUNCH_ATTRIBUTES="'job:${CIRCLE_JOB}' 'deployment:byoe' 'splunkmajor:<< parameters.splunk_version >>' 'splunk:${SPLUNK_VERSION}' 'branch:<< pipeline.git.branch >>' 'commit:${CIRCLE_SHA1}' 'release:${RELEASE}' 'version:$VERSION' 'test_set:<<parameters.test_set>>' 'repo:${CIRCLE_PROJECT_REPONAME}'"
             export RP_PROJECT=addonfactory
             export RP_LAUNCH="$CIRCLE_PROJECT_REPONAME-$(echo <<parameters.test_set>> | sed 's/\(.*\)\(-.*\)/\1/')"
             export RP_LAUNCH_DESC="ci run"
@@ -424,7 +428,7 @@ jobs:
             fi
 
             #Report portal integration
-            export RP_LAUNCH_ATTRIBUTES="'job:${CIRCLE_JOB}' 'deployment:byoe' 'branch:<< pipeline.git.branch >>' 'commit:${CIRCLE_SHA1}' 'release:${RELEASE}' 'version:$(./semtag getcurrent)' 'test_set:<<parameters.test_set>>' 'repo:${CIRCLE_PROJECT_REPONAME}'"
+            export RP_LAUNCH_ATTRIBUTES="'job:${CIRCLE_JOB}' 'deployment:byoe' 'branch:<< pipeline.git.branch >>' 'commit:${CIRCLE_SHA1}' 'release:${RELEASE}' 'version:$VERSION' 'test_set:<<parameters.test_set>>' 'repo:${CIRCLE_PROJECT_REPONAME}'"
             export RP_PROJECT=addonfactory
 
             export RP_LAUNCH="$CIRCLE_PROJECT_REPONAME-$(echo <<parameters.test_set>> | sed 's/\(.*\)\(-.*\)/\1/')"
