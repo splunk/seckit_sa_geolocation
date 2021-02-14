@@ -33,11 +33,7 @@ jobs:
       - run:
           name: Generate Addon
           command: |
-            touch nextRelease.txt
-            npx -p @semantic-release/exec -p @semantic-release/changelog -p @semantic-release/git -p semantic-release semantic-release --verifyReleaseCmd 'echo VERSION=${nextRelease.version}>nextRelease.txt' --dry-run
-            cat nextRelease.txt
-            source nextRelease.txt
-            .circleci/package_release.sh $VERSION
+            .circleci/package_release.sh 0.0.0B$CIRCLE_BUILD_NUM
       - persist_to_workspace:
           root: /home/circleci/project
           paths:
@@ -49,9 +45,6 @@ jobs:
       - store_artifacts:
           path: build/package/deployment
           destination: build-package-deployment
-      - store_artifacts:
-          path: build/VERSION
-          destination: build-version
   splunk-app-release:
     docker:
       - image: circleci/buildpack-deps:stable
@@ -91,9 +84,6 @@ jobs:
       - store_artifacts:
           path: build/package/deployment
           destination: build-package-deployment
-      - store_artifacts:
-          path: build/VERSION
-          destination: build-version
   splunk-app-inspect:
     parameters:
       options:
