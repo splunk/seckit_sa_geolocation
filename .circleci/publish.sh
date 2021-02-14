@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##
 ## SPDX-FileCopyrightText: 2020 Splunk, Inc. <sales@splunk.com>
-## SPDX-License-Identifier: LicenseRef-Splunk-1-2020
+## SPDX-License-Identifier: LicenseRef-Apache-2.0
 ##
 ##
 source .splunkbase 

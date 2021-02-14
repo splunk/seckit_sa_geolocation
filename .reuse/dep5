@@ -29,7 +29,6 @@ Files: package/metadata/*
 Copyright: $YEAR $NAME <$CONTACT>
 License: Apache-2.0
 
-
 Files: package/app.manifest
 Copyright: $YEAR $NAME <$CONTACT>
 License: Apache-2.0
@@ -50,7 +49,7 @@ Files: Dockerfile*
 Copyright: $YEAR $NAME <$CONTACT>
 License: Apache-2.0
 
-Files: semtag
+Files: CHANGELOG.md
 Copyright: $YEAR $NAME <$CONTACT>
 License: Apache-2.0
 
