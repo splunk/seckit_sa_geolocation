@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+##
+## SPDX-FileCopyrightText: 2020 Splunk, Inc. <sales@splunk.com>
+## SPDX-License-Identifier: LicenseRef-Splunk-1-2020
+##
+##
 source .splunkbase 
 source ~/.venv/bin/activate
 PACKAGE=$(ls build/package/splunkbase/*)

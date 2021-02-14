@@ -387,7 +387,7 @@ jobs:
         default: py3-3.7.8
     docker:
       - image: circleci/python:3.7
-    resource_class: xlarge
+    resource_class: large
     steps:
       - checkout
       - run: git submodule sync
@@ -460,42 +460,6 @@ jobs:
       - store_test_results:
           path: test-results
 
-  release:
-    docker:
-      - image: circleci/node:12
-    steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - run:
-          name: "Apply Release Tag"
-          command: |
-            npx semantic-release
-
-  publish-sbase:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - run:
-          name: Install utils
-          command: |
-            pip install git+https://github.com/pixelb/crudini
-      - run:
-          name: "Publish on Splunkbase"
-          command: |
-            source .splunkbase
-            PACKAGE=$(ls /tmp/workspace/build/package/splunkbase/*)
-            PACKAGE_ID=$(crudini --get package/default/app.conf id name)
-            [[ << pipeline.git.tag >> =~ ^v[0-9]*.[0-9]*.[0-9]*$ ]] || export ISPRE=-prerelease
-            [ "${ISPRE}" == "-prerelease" ] && SPLUNKBASE_VIS="false" || SPLUNKBASE_VIS="true"
-            curl -u ${SPLUNKBASE_USERNAME}:${SPLUNKBASE_PASSWORD}  --request POST https://splunkbase.splunk.com/api/v1/app/${SPLUNKBASE_ID}/new_release/ -F "files[]=@${PACKAGE}" -F "filename=${PACKAGE_ID}.spl" -F "splunk_versions=${SPLUNKBASE_SPLUNK_VERSION}" -F "visibility=${SPLUNKBASE_VIS}"
   reuse:
     docker:
       - image: circleci/python:3.7
@@ -619,6 +583,12 @@ workflows:
               args: [""]
           requires:
             - package
+            - reuse
+            - splunk-app-inspect
+            - splunk-app-test-knowledge
+            - splunk-app-test-ui
+            - splunk-app-test-modinput
+            - splunk-app-backend-test
           name: release
           context:
             - gdi-github

@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+##
+## SPDX-FileCopyrightText: 2020 Splunk, Inc. <sales@splunk.com>
+## SPDX-License-Identifier: LicenseRef-Splunk-1-2020
+##
+##
 VERSION=$(echo $1 | sed "s/-develop./develop/g")
 echo VERSION="$VERSION" 
 source ~/.venv/bin/activate 
