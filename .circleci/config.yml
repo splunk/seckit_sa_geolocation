@@ -33,6 +33,7 @@ jobs:
       - run:
           name: Generate Addon
           command: |
+            mkdir build || true
             echo VERSION=0.0.0B$CIRCLE_BUILD_NUM>build/VERSION
             .circleci/package_release.sh 0.0.0B$CIRCLE_BUILD_NUM
       - persist_to_workspace:
