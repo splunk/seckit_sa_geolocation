@@ -78,11 +78,6 @@ jobs:
           command: |
             touch nextRelease.txt
             npx -p @semantic-release/exec -p @semantic-release/changelog -p @semantic-release/git -p semantic-release semantic-release
-      - persist_to_workspace:
-          root: /home/circleci/project
-          paths:
-            - output
-            - build
       - store_artifacts:
           path: build/package/splunkbase
           destination: build-package-splunkbase
