@@ -34,7 +34,10 @@ jobs:
           name: Generate Addon
           command: |
             touch nextRelease.txt
-            npx -p @semantic-release/exec -p @semantic-release/changelog -p @semantic-release/git -p semantic-release semantic-release --verifyReleaseCmd '.circleci/package_release.sh ${nextRelease.version}' --dry-run
+            npx -p @semantic-release/exec -p @semantic-release/changelog -p @semantic-release/git -p semantic-release semantic-release --verifyReleaseCmd 'echo VERSION=${nextRelease.version}>nextRelease.txt' --dry-run
+            cat nextRelease.txt
+            source nextRelease.txt
+            .circleci/package_release.sh $VERSION
       - persist_to_workspace:
           root: /home/circleci/project
           paths:
