@@ -4,5 +4,5 @@
 ##
 ##
 
-splunktaucclib==4.0.13
+splunktaucclib==4.1.1
 geoip2==4.1.0
