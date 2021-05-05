@@ -1,6 +1,6 @@
 ##
-## SPDX-FileCopyrightText: 2020 Splunk, Inc. <sales@splunk.com>
-## SPDX-License-Identifier: Apache-2.0
+## SPDX-FileCopyrightText: 2021 Splunk, Inc. <sales@splunk.com>
+## SPDX-License-Identifier: LicenseRef-Splunk-1-2020
 ##
 ##
 version: "3.7"
@@ -143,6 +143,25 @@ services:
       - PROXY_USERNAME=user1
       - PROXY_PASSWORD=123456
     tty: true
+
+  uf:
+    build:
+      context: .
+      dockerfile: Dockerfile-uf
+      args:
+        SPLUNK_APP_ID: ${SPLUNK_APP_ID}
+        SPLUNK_APP_PACKAGE: ${SPLUNK_APP_PACKAGE}
+        SPLUNK_VERSION: ${SPLUNK_VERSION}
+    hostname: uf
+    ports:
+      - "8089"
+    links:
+      - splunk
+    environment:
+      - SPLUNK_PASSWORD=Chang3d!
+      - SPLUNK_START_ARGS=--accept-license
+    volumes:
+      - results:/home/circleci/work
 
 volumes:
   results:

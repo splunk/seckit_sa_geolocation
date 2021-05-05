@@ -1,0 +1,14 @@
+ARG SPLUNK_VERSION=latest
+FROM splunk/splunk:$SPLUNK_VERSION
+ARG SPLUNK_APP_ID=TA_UNKNOWN
+ARG SPLUNK_APP_PACKAGE=$SPLUNK_APP_PACKAGE
+RUN echo Splunk VERSION=$SPLUNK_VERSION
+
+COPY deps/apps /opt/splunk/etc/apps/
+COPY deps/build/addonfactory_test_matrix_splunk/packages/all/common /opt/splunk/etc/apps/
+COPY deps/build/addonfactory_test_matrix_splunk/packages/all/sh /opt/splunk/etc/apps/
+COPY deps/build/addonfactory_test_matrix_splunk/packages/all/addon_factory_web /opt/splunk/etc/system/local
+COPY $SPLUNK_APP_PACKAGE /opt/splunk/etc/apps/$SPLUNK_APP_ID
+
+COPY .pytest.expect /home/circleci/work_backend/.pytest.expect
+COPY tests /home/circleci/work_backend/tests
