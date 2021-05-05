@@ -144,7 +144,7 @@ jobs:
           command: |
             python -m venv ~/.venv
             source ~/.venv/bin/activate
-            pip install https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
+            pip install splunk-appinspect==2.5.0
       - run:
           name: inspect
           command: |
@@ -405,8 +405,8 @@ jobs:
 
   semgrep:
     environment:
-        SEMGREP_REPO_URL: << pipeline.project.git_url >>
-        SEMGREP_BRANCH: << pipeline.git.branch >>
+      SEMGREP_REPO_URL: << pipeline.project.git_url >>
+      SEMGREP_BRANCH: << pipeline.git.branch >>
     docker:
       - image: returntocorp/semgrep-agent:v1
         user: root
@@ -472,7 +472,6 @@ jobs:
             go get -v -u github.com/tcnksm/ghr
             $HOME/go/bin/ghr -t ${GH_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace "<< pipeline.git.tag >>" /tmp/workspace/build/package/splunkbase
             $HOME/go/bin/ghr -t ${GH_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace "<< pipeline.git.tag >>" /tmp/workspace/build/package/deployment
-
 
   publish-sbase:
     docker:
@@ -554,7 +553,7 @@ workflows:
           matrix:
             alias: splunk-app-test-knowledge
             parameters:
-              splunk_version: ["7.2","8.1"]
+              splunk_version: ["7.2", "8.1"]
               sc4s_version: ["1"]
               test_set: ["knowledge"]
           filters:
@@ -569,7 +568,7 @@ workflows:
           matrix:
             alias: splunk-app-test-ui
             parameters:
-              splunk_version: ["7.2","8.1"]
+              splunk_version: ["7.2", "8.1"]
               sc4s_version: ["1"]
               test_set: ["ui-chrome"]
           filters:
@@ -583,7 +582,7 @@ workflows:
           matrix:
             alias: splunk-app-test-modinput
             parameters:
-              splunk_version: ["7.2","8.1"]
+              splunk_version: ["7.2", "8.1"]
               sc4s_version: ["1"]
               test_set: ["modinput_functional", "modinput_others"]
           filters:
@@ -600,7 +599,7 @@ workflows:
               test_set: ["py2-2.7.17", "py3-3.7.4", "py3-3.7.8"]
           filters:
             branches:
-              only: /.*/            
+              only: /.*/
       - approval-release:
           requires:
             - package
