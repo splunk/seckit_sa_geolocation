@@ -3,7 +3,7 @@
 ## SPDX-License-Identifier: Apache-2.0
 ##
 ## Addon Requirements for Testing
-splunk-add-on-ucc-framework==4.4.0
+splunk-add-on-ucc-framework==5.0.3
 lovely-pytest-docker
 reuse
 pytest
