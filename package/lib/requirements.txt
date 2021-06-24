@@ -5,4 +5,4 @@
 ##
 
 splunktaucclib==4.1.2
-geoip2==4.1.0
+geoip2==4.2.0
