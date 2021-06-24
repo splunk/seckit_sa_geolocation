@@ -2,7 +2,7 @@
 
 This supporting add-on (SA) for Splunk advanced IP information enrichment using the MaxMind family of databases.
 
-https://www.maxmind.com/en/geoip2-databases Supported One of City2Lite (Free) City2 (Paid)
+[MaxMind](https://www.maxmind.com/en/geoip2-databases) Supported One of City2Lite (Free) City2 (Paid)
 
 Supported databases:
 
@@ -49,4 +49,5 @@ This application is community supported. See the project repository for more inf
 
 # Binary File Declaration
 
-bin/geoipupdate/linux_amd64/geoipupdate is provided by MaxMind source and releases can be found at GeoIPUpdate
+bin/geoipupdate/linux_amd64/geoipupdate is provided by MaxMind source and releases can be found at [github](https://github.com/maxmind/geoipupdate)
+lib/maxminddb/extension.cpython-37m-x86_64-linux-gnu.so is provided by MaxMind source can be found at [github](https://github.com/maxmind/MaxMind-DB-Reader-python)
