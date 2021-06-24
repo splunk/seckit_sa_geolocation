@@ -444,7 +444,7 @@ jobs:
 
   release:
     docker:
-      - image: circleci/node:12
+      - image: circleci/node:14
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
