@@ -43,12 +43,13 @@ orbs:
                   CIRCLE_TAG=${CIRCLE_TAG:1}
                   echo CIRCLE_TAG=$CIRCLE_TAG
                   ucc-gen --ta-version="$CIRCLE_TAG"
-                fi
+                fi                
           - run:
               name: Generating package
               command: |
                 PACKAGE_ID=$(ls output/)
                 BUILD_DIR=output/$PACKAGE_ID
+                rm -rf $BUILD_DIR/lib/aiohttp/.hash || true
                 find $BUILD_DIR/lib -executable -type f -exec chmod -x {} \; 2>/dev/null || true
                 source ~/.venv/bin/activate
                 slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
