@@ -1,3 +1,4 @@
 .DS_Store
 eventgen.conf
 samples
+lib/aiohttp/.hash
