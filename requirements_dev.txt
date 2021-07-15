@@ -10,7 +10,7 @@ pytest
 https://download.splunk.com/misc/packaging-toolkit/splunk-packaging-toolkit-1.0.1.tar.gz
 pytest-xdist
 pytest-ordering
-pytest-splunk-addon==1.7.0
+pytest-splunk-addon==1.7.2
 pytest-expect
 pytest-splunk-addon-ui-smartx==1.1.2
 pytest-rerunfailures
