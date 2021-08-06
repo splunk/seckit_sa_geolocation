@@ -3,7 +3,7 @@
 ## SPDX-License-Identifier: Apache-2.0
 ##
 ## Python2 Addon Requirements for Testing
-lovely-pytest-docker==0.2.0
+lovely-pytest-docker==0.2.1
 pytest==6.2.4
 pytest-xdist==2.3.0
 pytest-expect==1.1.0
