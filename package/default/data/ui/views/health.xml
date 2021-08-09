@@ -5,7 +5,7 @@
       <title>MMDB Status</title>
       <table>
         <search>
-          <query>index=_internal sourcetype="seckitsageolocation:log" mmdb=* | stats latest(size) as size latest(mtime) as mtime by mmdb</query>
+          <query>index=_internal sourcetype="SecKit_SA_geolocation:log" mmdb=* | stats latest(size) as size latest(mtime) as mtime by mmdb</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
