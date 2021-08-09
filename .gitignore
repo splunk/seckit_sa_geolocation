@@ -54,3 +54,4 @@ src
 # ucc ui extensions
 yarn-error.log
 node_modules/
+output
