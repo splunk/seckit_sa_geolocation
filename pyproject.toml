@@ -11,20 +11,18 @@ splunktaucclib = "4.1.2"
 geoip2 = "4.2.0"
 
 [tool.poetry.dev-dependencies]
-splunk-add-on-ucc-framework = "4.4.0"
+splunk-add-on-ucc-framework = "5.6.1"
 lovely-pytest-docker = "^0.2.1"
 reuse = "^0.13.0"
 pytest = "^6.2.4"
 pytest-xdist = "^2.3.0"
 pytest-ordering = "^0.6"
-pytest-splunk-addon = "1.7.0"
+pytest-splunk-addon = "^1.7.0"
 pytest-expect = "^1.1.0"
 pytest-rerunfailures = "^10.1"
 requests = "^2.26.0"
 coverage = "^5.5"
 splunk-sdk = "^1.6.16"
-six = "*"
-future = "*"
 splunk-packaging-toolkit = "^1.0.1"
 
 [build-system]
