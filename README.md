@@ -1,17 +1,33 @@
-# Seckit_SA_geolocation
+## Setup of developer env
 
-This the the SecKit Add-on for MaxMind our offical releases can be found on [Splunkbase](https://splunkbase.splunk.com/app/3022)
+Note: Must install docker desktop, vscode or pycharm pro optional
 
-# Documentation
+Note2: Appinspect requires libmagic verify this has been installed correctly each time a new workstation/vm is used https://dev.splunk.com/enterprise/docs/releaseapps/appinspect/splunkappinspectclitool/installappinspect
 
-Can be found [here](package/README.md)
+```bash
+git clone git@github.com:splunk/<repo slug>.git
+cd <repo dir>
+git submodule update --init --recursive
 
-# CI Status
+#setup python venv must be 3.7
+/Library/Frameworks/Python.framework/Versions/3.7/bin/python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements_dev.txt
+pip install https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
 
-## Master
+```
 
-[![CircleCI](https://circleci.com/gh/splunk/seckit_sa_geolocation/tree/master.svg?style=svg)](https://circleci.com/gh/splunk/seckit_sa_geolocation/tree/master)
 
-## Develop
+## Test
 
-[![CircleCI](https://circleci.com/gh/splunk/seckit_sa_geolocation/tree/develop.svg?style=svg)](https://circleci.com/gh/splunk/seckit_sa_geolocation/tree/develop)
+Using docker 
+
+```bash
+pytest
+```
+
+Using external Splunk instance with Eventgen and app pre-installed
+
+```bash
+pytest --splunk-type=external --splunk-host=something --splunk-user=foo --splunk-password=something
+```

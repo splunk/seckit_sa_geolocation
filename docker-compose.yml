@@ -25,6 +25,7 @@ services:
       - RP_LAUNCH=${RP_LAUNCH}
       - RP_LAUNCH_DESC=${RP_LAUNCH_DESC}
       - IMAGE_TAG=${IMAGE_TAG}
+      - TEST_DEBUG=${TEST_DEBUG}
     env_file:
       - test_credentials.env
     build:
@@ -74,6 +75,7 @@ services:
       - SC4S_LISTEN_PFSENSE_UDP_PORT=5006
       - SC4S_ARCHIVE_GLOBAL=no
       - SC4S_LISTEN_CHECKPOINT_SPLUNK_NOISE_CONTROL=yes
+      - TEST_SC4S_ACTIVATE_EXAMPLES=yes
 
   socks5:
     image: serjs/go-socks5-proxy:latest
@@ -131,6 +133,7 @@ services:
     hostname: sauceconnect
     ports:
       - "4445"
+
   http_proxy:
     build:
       context: .
@@ -162,6 +165,20 @@ services:
       - SPLUNK_START_ARGS=--accept-license
     volumes:
       - results:/home/circleci/work
+  
+  chrome-grid:
+    image: selenium/standalone-chrome-debug
+    shm_size: 2gb
+    ports:
+      - "6900:5900"
+      - "4444"
+
+  firefox-grid:
+    image: selenium/standalone-firefox-debug
+    shm_size: 2gb
+    ports:
+      - "6901:5900"
+      - "4444"
 
 volumes:
   results:

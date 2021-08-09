@@ -3,7 +3,7 @@
 ## SPDX-License-Identifier: LicenseRef-Splunk-1-2020
 ##
 ##
-
+# jscpd:ignore-start
 version: 2.1
 orbs:
   go: circleci/go@0.2.0
@@ -12,7 +12,7 @@ orbs:
       package:
         docker:
           - image: circleci/buildpack-deps:stable
-        resource_class: large
+        resource_class: small
         steps:
           - checkout
           - run:
@@ -20,18 +20,36 @@ orbs:
               command: |
                 sudo apt-get update
                 sudo apt-get install -y python2 python-pip python-virtualenv python3 python3.7 python3-pip python3-virtualenv
+                sudo pip3 install poetry                  
                 python3.7 -m virtualenv ~/.venv -p python3
                 source ~/.venv/bin/activate
                 pip install pip --upgrade
+                if [ -f "poetry.lock" ]
+                then
+                  mkdir -p package/lib || true
+                  poetry export --without-hashes -o package/lib/requirements.txt
+                  poetry export --without-hashes --dev -o requirements_dev.txt
+                fi
                 pip install -r requirements_dev.txt --use-deprecated=legacy-resolver || true
                 pip install semantic_version==2.6.0
                 sudo apt install npm
+                if [ -f "yarn.lock" ]
+                then
+                  sudo npm install --global yarn
+                  yarn
+                fi
+
           - run:
               name: Generate Addon
               command: |
                 touch nextRelease.txt
-                npx -p @semantic-release/exec -p semantic-release semantic-release --dry-run --plugins "@semantic-release/commit-analyzer,@semantic-release/exec" --analyzeCommits @semantic-release/commit-analyzer --verifyRelease @semantic-release/exec --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt'
-                sed -i "s/-develop./develop/g" nextRelease.txt
+                npx -p @semantic-release/exec -p semantic-release@17.0.0 -p semantic-release/git -p semantic-release/github \
+                  semantic-release --dry-run \
+                  --plugins "@semantic-release/commit-analyzer,@semantic-release/exec,@semantic-release/git,@semantic-release/github" \
+                  --analyzeCommits @semantic-release/commit-analyzer \
+                  --verifyRelease @semantic-release/exec \
+                  --verifyReleaseCmd 'echo ${nextRelease.version} > nextRelease.txt'
+                sed -i "s/-beta./b/g" nextRelease.txt
                 VERSION=$(cat nextRelease.txt)
                 echo VERSION="$VERSION"
                 echo CIRCLE_TAG=$CIRCLE_TAG
@@ -43,13 +61,16 @@ orbs:
                   CIRCLE_TAG=${CIRCLE_TAG:1}
                   echo CIRCLE_TAG=$CIRCLE_TAG
                   ucc-gen --ta-version="$CIRCLE_TAG"
-                fi                
+                fi
+                if [ -f "yarn.lock" ]
+                then
+                  yarn run build
+                fi
           - run:
               name: Generating package
               command: |
                 PACKAGE_ID=$(ls output/)
                 BUILD_DIR=output/$PACKAGE_ID
-                rm -rf $BUILD_DIR/lib/aiohttp/.hash || true
                 find $BUILD_DIR/lib -executable -type f -exec chmod -x {} \; 2>/dev/null || true
                 source ~/.venv/bin/activate
                 slim generate-manifest $BUILD_DIR --update >/tmp/app.manifest   || true
@@ -136,6 +157,8 @@ jobs:
         default: test
     docker:
       - image: circleci/python:3.7
+    resource_class: small
+
     steps:
       - checkout
       - attach_workspace:
@@ -145,7 +168,7 @@ jobs:
           command: |
             python -m venv ~/.venv
             source ~/.venv/bin/activate
-            pip install https://download.splunk.com/misc/appinspect/splunk-appinspect-latest.tar.gz
+            pip install splunk-appinspect
       - run:
           name: inspect
           command: |
@@ -164,43 +187,43 @@ jobs:
             cat test-results/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml | sed 's/<skipped\/>//g' | sed 's/skipped[^ ]*/skipped=\"0\"/g' >/tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml
             zip -j /tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.zip /tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.xml
 
-            LUUID=$(curl -X POST "$RP_ENDPOINT/api/v1/addonfactory/launch/import" -H "accept: */*" -H "Content-Type: multipart/form-data" -H "Authorization: bearer $RP_UUID" -F "file=@/tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.zip;type=application/zip" 2>/dev/null | sed 's/\(.*id = \)\([^ ]*\)\(.*\)/\2/')
-            echo LUUID=$LUUID
-            LID=$(curl -X GET "$RP_ENDPOINT/api/v1/addonfactory/launch/uuid/$LUUID" -H "accept: */*" -H "Authorization: bearer $RP_UUID" 2>/dev/null| jq .id)            
-            echo LID=$LID
-            APPINSPECTVER=$(splunk-appinspect list version | sed 's/\(.*Version \)\(.*\)/\2/')
-            UPDATE="
-                { \"attributes\": 
-                    [ 
-                        { \"key\": \"job\",
-                        \"value\": \"${CIRCLE_JOB}\"
-                        },
-                        { \"key\": \"appinspect\",
-                        \"value\": \"$APPINSPECTVER\"
-                        },
-                        { \"key\": \"branch\",
-                        \"value\": \"<< pipeline.git.branch >>\"
-                        },
-                        { \"key\": \"commit\",
-                        \"value\": \"${CIRCLE_SHA1}\"
-                        },
-                        { \"key\": \"release\",
-                        \"value\": \"${RELEASE}\"
-                        },
-                        { \"key\": \"version\",
-                        \"value\": \"$(./semtag getcurrent)\"
-                        },
-                        { \"key\": \"repo\",
-                        \"value\": \"$CIRCLE_PROJECT_REPONAME\"
-                        }
-                    ]
-                }"
-            echo $UPDATE | jq
-            curl -X PUT "$RP_ENDPOINT/api/v1/addonfactory/launch/$LID/update" \
-              -H "accept: */*" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: bearer $RP_UUID" \
-              -d "$UPDATE"
+            # LUUID=$(curl -X POST "$RP_ENDPOINT/api/v1/addonfactory/launch/import" -H "accept: */*" -H "Content-Type: multipart/form-data" -H "Authorization: bearer $RP_UUID" -F "file=@/tmp/$CIRCLE_PROJECT_REPONAME-appinspect-mode-<<parameters.label>>.zip;type=application/zip" 2>/dev/null | sed 's/\(.*id = \)\([^ ]*\)\(.*\)/\2/')
+            # echo LUUID=$LUUID
+            # LID=$(curl -X GET "$RP_ENDPOINT/api/v1/addonfactory/launch/uuid/$LUUID" -H "accept: */*" -H "Authorization: bearer $RP_UUID" 2>/dev/null| jq .id)            
+            # echo LID=$LID
+            # APPINSPECTVER=$(splunk-appinspect list version | sed 's/\(.*Version \)\(.*\)/\2/')
+            # UPDATE="
+            #     { \"attributes\": 
+            #         [ 
+            #             { \"key\": \"job\",
+            #             \"value\": \"${CIRCLE_JOB}\"
+            #             },
+            #             { \"key\": \"appinspect\",
+            #             \"value\": \"$APPINSPECTVER\"
+            #             },
+            #             { \"key\": \"branch\",
+            #             \"value\": \"<< pipeline.git.branch >>\"
+            #             },
+            #             { \"key\": \"commit\",
+            #             \"value\": \"${CIRCLE_SHA1}\"
+            #             },
+            #             { \"key\": \"release\",
+            #             \"value\": \"${RELEASE}\"
+            #             },
+            #             { \"key\": \"version\",
+            #             \"value\": \"$(./semtag getcurrent)\"
+            #             },
+            #             { \"key\": \"repo\",
+            #             \"value\": \"$CIRCLE_PROJECT_REPONAME\"
+            #             }
+            #         ]
+            #     }"
+            # echo $UPDATE | jq
+            # curl -X PUT "$RP_ENDPOINT/api/v1/addonfactory/launch/$LID/update" \
+            #   -H "accept: */*" \
+            #   -H "Content-Type: application/json" \
+            #   -H "Authorization: bearer $RP_UUID" \
+            #   -d "$UPDATE"
       - run:
           name: set result
           command: |
@@ -224,9 +247,13 @@ jobs:
         description: sc4s version
         type: string
         default: latest
+      resource_class:
+        description: Docker CicreCi machine size
+        type: string
+        default: large
     docker:
       - image: circleci/python:3.7
-    resource_class: xlarge
+    resource_class: <<parameters.resource_class>>
     steps:
       - checkout
       - run: git submodule sync
@@ -249,6 +276,16 @@ jobs:
             ls
             rm *.tar.gz
             ls
+      - run:
+          name: generate requirements
+          command: |
+            if [ -f "poetry.lock" ]
+            then
+              mkdir -p package/lib || true
+              pip install poetry
+              poetry export --without-hashes -o package/lib/requirements.txt
+              poetry export --without-hashes --dev -o requirements_dev.txt
+            fi
       - run:
           name: Splunk Testing
           no_output_timeout: 2h
@@ -288,6 +325,11 @@ jobs:
 
             # Saucelab connection
             [ -z $BROWSER ] || [ "$UI_TEST_HEADLESS" = "true" ] || docker-compose -f docker-compose-ci.yml up -d sauceconnect
+
+            # Start selenium grid if needed.
+             if [[ "<<parameters.test_set>>" == *"firefox_grid"* ]]; then docker-compose -f docker-compose-ci.yml up -d firefox-grid; fi
+             if [[ "<<parameters.test_set>>" == *"chrome_grid"* ]]; then docker-compose -f docker-compose-ci.yml up -d chrome-grid; fi
+
 
             # Start Splunk
             docker-compose -f docker-compose-ci.yml up -d splunk
@@ -339,7 +381,7 @@ jobs:
         default: py3-3.7.8
     docker:
       - image: circleci/python:3.7
-    resource_class: xlarge
+    resource_class: small
     steps:
       - checkout
       - run: git submodule sync
@@ -362,6 +404,16 @@ jobs:
             ls
             rm *.tar.gz
             ls
+      - run:
+          name: generate requirements
+          command: |
+            if [ -f "poetry.lock" ]
+            then
+              mkdir -p package/lib || true
+              pip install poetry
+              poetry export --without-hashes -o package/lib/requirements.txt
+              poetry export --without-hashes --dev -o requirements_dev.txt
+            fi
       - run:
           name: Splunk Testing
           no_output_timeout: 2h
@@ -406,11 +458,12 @@ jobs:
 
   semgrep:
     environment:
-        SEMGREP_REPO_URL: << pipeline.project.git_url >>
-        SEMGREP_BRANCH: << pipeline.git.branch >>
+      SEMGREP_REPO_URL: << pipeline.project.git_url >>
+      SEMGREP_BRANCH: << pipeline.git.branch >>
     docker:
       - image: returntocorp/semgrep-agent:v1
         user: root
+    resource_class: medium
     steps:
       - checkout
       - run:
@@ -444,7 +497,7 @@ jobs:
 
   release:
     docker:
-      - image: circleci/node:14
+      - image: circleci/node:12
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
@@ -454,8 +507,8 @@ jobs:
       - run:
           name: "Apply Release Tag"
           command: |
-            npx semantic-release
-
+            npx -p @semantic-release/exec -p semantic-release@17.0.0 -p semantic-release/git -p semantic-release/github \
+                semantic-release
   publish-gh:
     docker:
       - image: circleci/python:3.7
@@ -473,7 +526,6 @@ jobs:
             go get -v -u github.com/tcnksm/ghr
             $HOME/go/bin/ghr -t ${GH_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace "<< pipeline.git.tag >>" /tmp/workspace/build/package/splunkbase
             $HOME/go/bin/ghr -t ${GH_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace "<< pipeline.git.tag >>" /tmp/workspace/build/package/deployment
-
 
   publish-sbase:
     docker:
@@ -500,6 +552,7 @@ jobs:
   reuse:
     docker:
       - image: circleci/python:3.7
+    resource_class: small
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
@@ -555,9 +608,10 @@ workflows:
           matrix:
             alias: splunk-app-test-knowledge
             parameters:
-              splunk_version: ["8.1","8.2"]
+              splunk_version: ["8.0", "8.2"]
               sc4s_version: ["1"]
               test_set: ["knowledge"]
+              resource_class: ["medium"]
           filters:
             branches:
               only: /.*/
@@ -570,9 +624,10 @@ workflows:
           matrix:
             alias: splunk-app-test-ui
             parameters:
-              splunk_version: ["8.1","8.2"]
+              splunk_version: ["8.0", "8.2"]
               sc4s_version: ["1"]
               test_set: ["ui-chrome"]
+              resource_class: ["medium"]
           filters:
             branches:
               only: /.*/
@@ -584,9 +639,10 @@ workflows:
           matrix:
             alias: splunk-app-test-modinput
             parameters:
-              splunk_version: ["8.1","8.2"]
+              splunk_version: ["8.0", "8.2"]
               sc4s_version: ["1"]
               test_set: ["modinput_functional", "modinput_others"]
+              resource_class: ["large"]
           filters:
             branches:
               only: /.*/
@@ -601,7 +657,7 @@ workflows:
               test_set: ["py3-3.7.4", "py3-3.7.8"]
           filters:
             branches:
-              only: /.*/            
+              only: /.*/
       - approval-release:
           requires:
             - package
@@ -652,3 +708,4 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v\d*\.\d*\.\d*$/
+# jscpd:ignore-end
