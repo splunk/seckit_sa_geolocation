@@ -48,6 +48,17 @@ tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)"
 tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins"]
 
 [[package]]
+name = "autoflake"
+version = "1.4"
+description = "Removes unused imports and unused variables"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+pyflakes = ">=1.1.0"
+
+[[package]]
 name = "beautifulsoup4"
 version = "4.8.1"
 description = "Screen-scraping library"
@@ -157,7 +168,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "dunamai"
-version = "1.6.0"
+version = "1.5.5"
 description = "Dynamic version generation"
 category = "dev"
 optional = false
@@ -198,7 +209,7 @@ python-versions = "*"
 name = "future"
 version = "0.18.2"
 description = "Clean single-source support for Python 3 and 2"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
@@ -286,6 +297,20 @@ description = "IPv4/IPv6 manipulation library"
 category = "dev"
 optional = false
 python-versions = "*"
+
+[[package]]
+name = "isort"
+version = "5.9.3"
+description = "A Python utility / library to sort Python imports."
+category = "dev"
+optional = false
+python-versions = ">=3.6.1,<4.0"
+
+[package.extras]
+pipfile_deprecated_finder = ["pipreqs", "requirementslib"]
+requirements_deprecated_finder = ["pipreqs", "pip-api"]
+colors = ["colorama (>=0.4.3,<0.5.0)"]
+plugins = ["setuptools"]
 
 [[package]]
 name = "jinja2"
@@ -500,6 +525,14 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
+name = "pyflakes"
+version = "2.3.1"
+description = "passive checker of Python programs"
+category = "dev"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[[package]]
 name = "pyparsing"
 version = "2.4.7"
 description = "Python parsing module"
@@ -706,14 +739,6 @@ python-debian = "*"
 requests = "*"
 
 [[package]]
-name = "schematics"
-version = "2.1.0"
-description = "Python Data Structures for Humans"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "semantic-version"
 version = "2.8.5"
 description = "A library implementing the 'SemVer' scheme."
@@ -725,25 +750,22 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 name = "six"
 version = "1.12.0"
 description = "Python 2 and 3 compatibility utilities"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*"
 
 [[package]]
 name = "solnlib"
-version = "3.0.5"
+version = "4.2.0"
 description = "The Splunk Software Development Kit for Splunk Solutions"
 category = "main"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*"
+python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
-future = ">=0,<1"
 requests = ">=2.24,<3.0"
-schematics = ">=2.1,<3.0"
-six = "*"
 sortedcontainers = ">=2.2,<3.0"
-splunk-sdk = "*"
+splunk-sdk = "1.6.16"
 
 [[package]]
 name = "sortedcontainers"
@@ -763,7 +785,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "splunk-add-on-ucc-framework"
-version = "5.6.1"
+version = "5.6.2"
 description = "Splunk Add-on SDK formerly UCC is a build and code generation framework"
 category = "dev"
 optional = false
@@ -771,7 +793,7 @@ python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
 defusedxml = ">=0.7.1,<0.8.0"
-dunamai = "*"
+dunamai = "1.5.5"
 jinja2 = ">=2,<4"
 jsonschema = ">=3.2.0,<4.0.0"
 lxml = ">=4.3,<5.0"
@@ -827,30 +849,29 @@ python-versions = "*"
 
 [[package]]
 name = "splunktalib"
-version = "1.2.1"
+version = "2.1.0"
 description = "Supporting library for Splunk Add-ons"
 category = "main"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*"
+python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
-defusedxml = ">=0.7.1,<0.8.0"
-httplib2 = "0.19.1"
-sortedcontainers = ">=2.2,<3.0"
+defusedxml = ">=0,<1"
+httplib2 = ">=0,<1"
+sortedcontainers = ">=2,<3"
 
 [[package]]
 name = "splunktaucclib"
-version = "4.1.2"
+version = "5.0.4"
 description = ""
 category = "main"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*"
+python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
-future = ">=0,<1"
-solnlib = ">=3,<4"
-splunk-sdk = ">=1.6,<2.0"
-splunktalib = ">=1.1,<2.0"
+solnlib = ">=4.0.0,<5.0.0"
+splunk-sdk = "1.6.16"
+splunktalib = ">=2.0.0,<3.0.0"
 
 [[package]]
 name = "text-unidecode"
@@ -925,7 +946,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "df52ced6463508c9e27c396ab23d02b25abdc642ffbcd619ec08ef13baa4c514"
+content-hash = "2001b4cafb31eb9b62e2f55a8a6f0f6a137d3d553a6457736356fbed8c12211a"
 
 [metadata.files]
 aiohttp = [
@@ -978,6 +999,9 @@ atomicwrites = [
 attrs = [
     {file = "attrs-21.2.0-py2.py3-none-any.whl", hash = "sha256:149e90d6d8ac20db7a955ad60cf0e6881a3f20d37096140088356da6c716b0b1"},
     {file = "attrs-21.2.0.tar.gz", hash = "sha256:ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb"},
+]
+autoflake = [
+    {file = "autoflake-1.4.tar.gz", hash = "sha256:61a353012cff6ab94ca062823d1fb2f692c4acda51c76ff83a8d77915fba51ea"},
 ]
 beautifulsoup4 = [
     {file = "beautifulsoup4-4.8.1-py2-none-any.whl", hash = "sha256:5279c36b4b2ec2cb4298d723791467e3000e5384a43ea0cdf5d45207c7e97169"},
@@ -1075,8 +1099,8 @@ defusedxml = [
     {file = "defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69"},
 ]
 dunamai = [
-    {file = "dunamai-1.6.0-py3-none-any.whl", hash = "sha256:44a94a4edebb145bb6198a2f26de957b12b77d43b7c9c0646be814c60cf5d8df"},
-    {file = "dunamai-1.6.0.tar.gz", hash = "sha256:6f1111f47e869ed58d44a7d37f112e3e7c761dce3c71f2c5464526928d7e9896"},
+    {file = "dunamai-1.5.5-py3-none-any.whl", hash = "sha256:525ac30db6ca4f8e48b9f198c2e8fbc2a9ce3ea189768361c621ea635212ee49"},
+    {file = "dunamai-1.5.5.tar.gz", hash = "sha256:32f30db71e8fd1adeb42fac45c04433680e47a28298447cd30304e0bba95a7dd"},
 ]
 execnet = [
     {file = "execnet-1.9.0-py2.py3-none-any.whl", hash = "sha256:a295f7cc774947aac58dde7fdc85f4aa00c42adf5d8f5468fc630c1acf30a142"},
@@ -1124,6 +1148,10 @@ iniconfig = [
 ipaddress = [
     {file = "ipaddress-1.0.22-py2.py3-none-any.whl", hash = "sha256:64b28eec5e78e7510698f6d4da08800a5c575caa4a286c93d651c5d3ff7b6794"},
     {file = "ipaddress-1.0.22.tar.gz", hash = "sha256:b146c751ea45cad6188dd6cf2d9b757f6f4f8d6ffb96a023e6f2e26eea02a72c"},
+]
+isort = [
+    {file = "isort-5.9.3-py3-none-any.whl", hash = "sha256:e17d6e2b81095c9db0a03a8025a957f334d6ea30b26f9ec70805411e5c7c81f2"},
+    {file = "isort-5.9.3.tar.gz", hash = "sha256:9c2ea1e62d871267b78307fe511c0838ba0da28698c5732d54e2790bf3ba9899"},
 ]
 jinja2 = [
     {file = "Jinja2-2.11.3-py2.py3-none-any.whl", hash = "sha256:03e47ad063331dd6a3f04a43eddca8a966a26ba0c5b7207a9a9e4e08f1b29419"},
@@ -1344,6 +1372,10 @@ py = [
     {file = "py-1.10.0-py2.py3-none-any.whl", hash = "sha256:3b80836aa6d1feeaa108e046da6423ab8f6ceda6468545ae8d02d9d58d18818a"},
     {file = "py-1.10.0.tar.gz", hash = "sha256:21b81bda15b66ef5e1a777a21c4dcd9c20ad3efd0b3f817e7a809035269e1bd3"},
 ]
+pyflakes = [
+    {file = "pyflakes-2.3.1-py2.py3-none-any.whl", hash = "sha256:7893783d01b8a89811dd72d7dfd4d84ff098e5eed95cfa8905b22bbffe52efc3"},
+    {file = "pyflakes-2.3.1.tar.gz", hash = "sha256:f5bc8ecabc05bb9d291eb5203d6810b49040f6ff446a756326104746cc00c1db"},
+]
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
@@ -1464,10 +1496,6 @@ reuse = [
     {file = "reuse-0.13.0-py3-none-any.whl", hash = "sha256:49d89aee8f76794e734ad6416c6be0d2ad9a415f4472fd4547754039e8630e0f"},
     {file = "reuse-0.13.0.tar.gz", hash = "sha256:89c87bd49308c8059cc36f8116872d73dc6e5788a29af8869be6532202bff801"},
 ]
-schematics = [
-    {file = "schematics-2.1.0-py2.py3-none-any.whl", hash = "sha256:8fcc6182606fd0b24410a1dbb066d9bbddbe8da9c9509f47b743495706239283"},
-    {file = "schematics-2.1.0.tar.gz", hash = "sha256:a40b20635c0e43d18d3aff76220f6cd95ea4decb3f37765e49529b17d81b0439"},
-]
 semantic-version = [
     {file = "semantic_version-2.8.5-py2.py3-none-any.whl", hash = "sha256:45e4b32ee9d6d70ba5f440ec8cc5221074c7f4b0e8918bdab748cc37912440a9"},
     {file = "semantic_version-2.8.5.tar.gz", hash = "sha256:d2cb2de0558762934679b9a104e82eca7af448c9f4974d1f3eeccff651df8a54"},
@@ -1477,8 +1505,8 @@ six = [
     {file = "six-1.12.0.tar.gz", hash = "sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"},
 ]
 solnlib = [
-    {file = "solnlib-3.0.5-py2.py3-none-any.whl", hash = "sha256:c433a4abf7f460a04c6b52d06e663bce3bc3f132bf5c34e11707bddc9847bbdd"},
-    {file = "solnlib-3.0.5.tar.gz", hash = "sha256:f09b5c97c92741e3bc3cc94e647398166be7d0fd8c8f78f17f3863c444f4842c"},
+    {file = "solnlib-4.2.0-py3-none-any.whl", hash = "sha256:11152d8aece1cc1830b311f024e7dede09e36ac56cb1e9c2cf897c788c461ded"},
+    {file = "solnlib-4.2.0.tar.gz", hash = "sha256:d31981768f280a49ed9997672b83231804254fb88a40af347b963c7a63ca0aa4"},
 ]
 sortedcontainers = [
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
@@ -1489,8 +1517,8 @@ soupsieve = [
     {file = "soupsieve-2.2.1.tar.gz", hash = "sha256:052774848f448cf19c7e959adf5566904d525f33a3f8b6ba6f6f8f26ec7de0cc"},
 ]
 splunk-add-on-ucc-framework = [
-    {file = "splunk_add_on_ucc_framework-5.6.1-py3-none-any.whl", hash = "sha256:b2c09a99dfe9f2fb783f8595571f8c92aff40b0b5f3ce3707764ba7f3a1566af"},
-    {file = "splunk_add_on_ucc_framework-5.6.1.tar.gz", hash = "sha256:3121d1ca5c0c54ed184406c50568a2c61443ba561ea38743618d1b9229b8022f"},
+    {file = "splunk_add_on_ucc_framework-5.6.2-py3-none-any.whl", hash = "sha256:b66031903fe8cec5bfc6beb307569b3b4306fd6107a6b9000d8d80dbef5c8f5c"},
+    {file = "splunk_add_on_ucc_framework-5.6.2.tar.gz", hash = "sha256:10618de4ad65f0cce7a3a5d6d8c9babcfe49d50c9828f06d385f8e5b3661ee53"},
 ]
 splunk-appinspect = [
     {file = "splunk-appinspect-2.7.0.tar.gz", hash = "sha256:bd18f140c109cdcca52468ab8f60c10ebca3e98c711ada8d0fdbc1a3198a64d9"},
@@ -1502,12 +1530,12 @@ splunk-sdk = [
     {file = "splunk-sdk-1.6.16.tar.gz", hash = "sha256:b4963a983f1538686cf3f83f9e5ee5e48419cc71744fc8bc0f60f8b8576efb98"},
 ]
 splunktalib = [
-    {file = "splunktalib-1.2.1-py2.py3-none-any.whl", hash = "sha256:61d632018f97c5971ff604dd2822185bb1eaf5706c72843616718cb5119c27cc"},
-    {file = "splunktalib-1.2.1.tar.gz", hash = "sha256:e6e4d0c1503f5b93399fe5435bc153910b3fc59602fca7f04827ad9b08ab9fff"},
+    {file = "splunktalib-2.1.0-py3-none-any.whl", hash = "sha256:2345bc4f21df4a3c70077b3fb76b3959988700f12d2755951a42e81d2f487650"},
+    {file = "splunktalib-2.1.0.tar.gz", hash = "sha256:700585b36313065fa894f0960b347a3926ce17a4e8c8c0bc41e9b2a661153912"},
 ]
 splunktaucclib = [
-    {file = "splunktaucclib-4.1.2-py2.py3-none-any.whl", hash = "sha256:65b9f879fa4ae4e18fd1bce324b2423e21fbb5cd349568c575a71973f4f33548"},
-    {file = "splunktaucclib-4.1.2.tar.gz", hash = "sha256:93f2f868228f215267f3e4b03ca913ca58db3b2033da29966b909e4072941f90"},
+    {file = "splunktaucclib-5.0.4-py3-none-any.whl", hash = "sha256:b250a15696c40149e665383d44d058399c47f9da2052a6a4e6bc1a4e485915c6"},
+    {file = "splunktaucclib-5.0.4.tar.gz", hash = "sha256:8f47a0830e58893f20d24f839656e9594475896d334de55d5d9c31d9a52a70a0"},
 ]
 text-unidecode = [
     {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
