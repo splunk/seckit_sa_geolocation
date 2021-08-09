@@ -431,40 +431,12 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
-name = "mock"
-version = "4.0.3"
-description = "Rolling backport of unittest.mock for all Pythons"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-
-[package.extras]
-build = ["twine", "wheel", "blurb"]
-docs = ["sphinx"]
-test = ["pytest (<5.4)", "pytest-cov"]
-
-[[package]]
 name = "multidict"
 version = "5.1.0"
 description = "multidict implementation"
 category = "main"
 optional = false
 python-versions = ">=3.6"
-
-[[package]]
-name = "munch"
-version = "2.5.0"
-description = "A dot-accessible dictionary (a la JavaScript objects)"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-six = "*"
-
-[package.extras]
-testing = ["pytest", "coverage", "astroid (>=1.5.3,<1.6.0)", "pylint (>=1.7.2,<1.8.0)", "astroid (>=2.0)", "pylint (>=2.3.1,<2.4.0)"]
-yaml = ["PyYAML (>=5.1.0)"]
 
 [[package]]
 name = "natsort"
@@ -791,23 +763,18 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "splunk-add-on-ucc-framework"
-version = "4.4.0"
+version = "5.6.1"
 description = "Splunk Add-on SDK formerly UCC is a build and code generation framework"
 category = "dev"
 optional = false
 python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
+defusedxml = ">=0.7.1,<0.8.0"
 dunamai = "*"
-future = ">=0,<1"
-jinja2 = ">=2,<3"
+jinja2 = ">=2,<4"
 jsonschema = ">=3.2.0,<4.0.0"
 lxml = ">=4.3,<5.0"
-mako = ">=1,<2"
-munch = ">=2,<3"
-reuse = "*"
-solnlib = ">=3,<4"
-splunktaucclib = ">=4,<5"
 
 [[package]]
 name = "splunk-appinspect"
@@ -958,7 +925,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "5983a7cbcc131f4f1b47236a8492a356701072237ef2ea275909ff467860080d"
+content-hash = "137c39b70e0bf7dfb4ac2177e81843bbadcc2bbbb2d95086ea583b8bd039daa7"
 
 [metadata.files]
 aiohttp = [
@@ -1278,10 +1245,6 @@ markupsafe = [
 maxminddb = [
     {file = "maxminddb-2.0.3.tar.gz", hash = "sha256:47e86a084dd814fac88c99ea34ba3278a74bc9de5a25f4b815b608798747c7dc"},
 ]
-mock = [
-    {file = "mock-4.0.3-py3-none-any.whl", hash = "sha256:122fcb64ee37cfad5b3f48d7a7d51875d7031aaf3d8be7c42e2bee25044eee62"},
-    {file = "mock-4.0.3.tar.gz", hash = "sha256:7d3fbbde18228f4ff2f1f119a45cdffa458b4c0dee32eb4d2bb2f82554bac7bc"},
-]
 multidict = [
     {file = "multidict-5.1.0-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:b7993704f1a4b204e71debe6095150d43b2ee6150fa4f44d6d966ec356a8d61f"},
     {file = "multidict-5.1.0-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:9dd6e9b1a913d096ac95d0399bd737e00f2af1e1594a787e00f7975778c8b2bf"},
@@ -1320,10 +1283,6 @@ multidict = [
     {file = "multidict-5.1.0-cp39-cp39-win32.whl", hash = "sha256:fc13a9524bc18b6fb6e0dbec3533ba0496bbed167c56d0aabefd965584557d80"},
     {file = "multidict-5.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:7df80d07818b385f3129180369079bd6934cf70469f99daaebfac89dca288359"},
     {file = "multidict-5.1.0.tar.gz", hash = "sha256:25b4e5f22d3a37ddf3effc0710ba692cfc792c2b9edfb9c05aefe823256e84d5"},
-]
-munch = [
-    {file = "munch-2.5.0-py2.py3-none-any.whl", hash = "sha256:6f44af89a2ce4ed04ff8de41f70b226b984db10a91dcc7b9ac2efc1c77022fdd"},
-    {file = "munch-2.5.0.tar.gz", hash = "sha256:2d735f6f24d4dba3417fa448cae40c6e896ec1fdab6cdb5e6510999758a4dbd2"},
 ]
 natsort = [
     {file = "natsort-7.1.1-py3-none-any.whl", hash = "sha256:d0f4fc06ca163fa4a5ef638d9bf111c67f65eedcc7920f98dec08e489045b67e"},
@@ -1530,8 +1489,8 @@ soupsieve = [
     {file = "soupsieve-2.2.1.tar.gz", hash = "sha256:052774848f448cf19c7e959adf5566904d525f33a3f8b6ba6f6f8f26ec7de0cc"},
 ]
 splunk-add-on-ucc-framework = [
-    {file = "splunk_add_on_ucc_framework-4.4.0-py3-none-any.whl", hash = "sha256:27f6fd199162d7d9e93676c030df75a57d765d383fd2e1991677b936749248f6"},
-    {file = "splunk_add_on_ucc_framework-4.4.0.tar.gz", hash = "sha256:896c75fe54d9e02d5c037995ba0035be9532cf56d476f0dfe3d2b80dba89c595"},
+    {file = "splunk_add_on_ucc_framework-5.6.1-py3-none-any.whl", hash = "sha256:b2c09a99dfe9f2fb783f8595571f8c92aff40b0b5f3ce3707764ba7f3a1566af"},
+    {file = "splunk_add_on_ucc_framework-5.6.1.tar.gz", hash = "sha256:3121d1ca5c0c54ed184406c50568a2c61443ba561ea38743618d1b9229b8022f"},
 ]
 splunk-appinspect = [
     {file = "splunk-appinspect-2.7.0.tar.gz", hash = "sha256:bd18f140c109cdcca52468ab8f60c10ebca3e98c711ada8d0fdbc1a3198a64d9"},
