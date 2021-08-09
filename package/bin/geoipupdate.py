@@ -228,7 +228,7 @@ class GEOIPUPDATE(smi.Script):
 
                     try:
                         subprocess.check_output(
-                        ["$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate " + guargs], shell=False,stderr=subprocess.STDOUT)
+                        ["$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate " + guargs], shell=False,stderr=subprocess.STDOUT) # nosemgrep: python.lang.security.audit.dangerous-subprocess-use.dangerous-subprocess-use
                     except CalledProcessError as e:
                         logger.exception(e)
                         logger.error("command args:\n")
