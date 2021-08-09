@@ -167,14 +167,14 @@ services:
       - results:/home/circleci/work
   
   chrome-grid:
-    image: selenium/standalone-chrome-debug
+    image: selenium/standalone-chrome-debug:91.0
     shm_size: 2gb
     ports:
       - "6900:5900"
       - "4444"
 
   firefox-grid:
-    image: selenium/standalone-firefox-debug
+    image: selenium/standalone-firefox-debug:90.0
     shm_size: 2gb
     ports:
       - "6901:5900"
