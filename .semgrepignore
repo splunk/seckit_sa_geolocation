@@ -27,3 +27,4 @@ tests/
 .github/
 .reuse/
 .vscode/
+deps/

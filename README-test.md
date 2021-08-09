@@ -3,7 +3,7 @@
 
 ## With Docker
 
-### Prerequisitory:
+### Prerequisitory - Docker
 - Git
 - Python3 (>=3.7)
 - Python2
@@ -11,7 +11,7 @@
 - Docker
 - Docker-compose
 
-### Steps:
+### Steps - Docker
 
 1. Clone the repository
 ```bash
@@ -49,7 +49,7 @@ export UI_TEST_HEADLESS="true"
 ```
 **Note:** If TEST_TYPE is `modinput_functional`, `modinput_others` or `ui`, also set all variables in [test_credentials.env](test_credentials.env) file with appropriate values encoded with base64.
 
-4. Docker Build and test execution:
+4. Docker Build and test execution
 ```bash
 docker-compose -f docker-compose.yml build
 
@@ -64,16 +64,16 @@ docker-compose -f docker-compose.yml up --abort-on-container-exit test
 
 ## With External
 
-### Prerequisitory:
+### Prerequisitory - external
 - Git
 - Python3 (>=3.7)
 - Python2
 - Splunk along with addon installed and HEC token created
 - If Addon support the syslog data ingestion(sc4s)
-    - Docker
-    - Docker-compose
+  - Docker
+  - Docker-compose
 
-### Steps:
+### Steps - external
 
 1. Clone the repository
 ```bash
@@ -109,7 +109,7 @@ docker-compose -f docker-compose.yml up -d splunk
 pytest -vv --splunk-type=external --splunk-app=<path-to-addon-package> --splunk-data-generator=<path to pytest-splunk-addon-data.conf file> --splunk-host=<hostname> --splunk-port=<splunk-management-port> --splunk-user=<username> --splunk-password=<password> --splunk-hec-token=<splunk_hec_token> --sc4s-host=<sc4s_host> --sc4s-port=<sc4s_port>
 ```
 
-- UI:
+- UI
 
 1. Set all variables in environment mentioned at [test_credentials.env](test_credentials.env) file with appropriate values encoded with base64.
 2. Download Browser's specific driver
@@ -117,14 +117,37 @@ pytest -vv --splunk-type=external --splunk-app=<path-to-addon-package> --splunk-
     - For Firefox: download geckodriver
     - For IE: download IEdriverserver
 3. Put the downloaded driver into `test/ui/` directory, make sure that it is within the environment's PATH variable, and that it is executable
-4. For Internet explorer, The steps mentioned at below link must be performed:
-https://github.com/SeleniumHQ/selenium/wiki/InternetExplorerDriver#required-configuration
-5. Execute the test cases:
+4. For Internet explorer, The steps mentioned at below link must be performed [selenium](https://github.com/SeleniumHQ/selenium/wiki/InternetExplorerDriver#required-configuration)
+
+5. Execute the test cases
  ```script
 pytest -vv --browser=<browser> --local --splunk-host=<web_url> --splunk-port=<mgmt_url> --splunk-user=<username> --splunk-password=<password>
  ```
+- Debug UI tests with selenium inside docker-compose stack.
+>prerequisite:
+> 1. Setup all env variables mentioned above. As BROWSER variable pickup one "chrome_grid" or "firefox_grid". TEST_TYPE=ui etc.
+> 2. Install [VNC Viewer](https://www.realvnc.com/en/connect/download/viewer/)
+1. To select which test should be run we can use DEBUG_TEST variable and setup it to ingest -k parameter
+```bash
+export DEBUG_TEST="-k test_name_to_run"
+```
+2. Build images and execute the test
+```bash
+docker-compose -f docker-compose.yml build
+docker-compose -f docker-compose.yml up
+```
+To watch the logs form docker container which run the test We can use command
+```bash
+docker logs -f containter_test_name [ eg. docker logs -f splunk-add-on-for-servicenow_test_1]
+```
+during the test execution when container with selenium standandalone hub is up and running We can connect to it using VNC Viewer.
+```bash
+localhost:6000  # chrome grid adress
+localhost:6001 # firefox grid adress
+```
+Password is "secret"
 
-- Modinput:
+- Modinput
 
 Install [splunk-add-on-for-modinput-test](https://github.com/splunk/splunk-add-on-for-modinput-test/releases/latest/) addon in splunk and set all variables in environment mentioned at [test_credentials.env](test_credentials.env) file with appropriate values encoded with base64 or add variables in pytest command mentioned in conftest file.
 ```bash

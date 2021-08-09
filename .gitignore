@@ -45,9 +45,12 @@ tests/functional
 .DS_Store
 .env
 src
-*.lock
 *_event
 *_wait
 !deps/build
 !package/appserver/static/js/build
 *.log
+
+# ucc ui extensions
+yarn-error.log
+node_modules/

@@ -1,5 +1,0 @@
-##
-## SPDX-FileCopyrightText: 2020 Splunk, Inc. <sales@splunk.com>
-## SPDX-License-Identifier: Apache-2.0
-##
-## Requirements Specific to the Addon for Testing
