@@ -11,7 +11,8 @@ import logging
 from pathlib import Path
 import requests 
 import tarfile 
-  
+from tempfile import NamedTemporaryFile
+
 def additional_packaging(ta_name=None,outputdir="output"):
     noshipdirs = ["aiohttp/.hash"]
     libdir = os.path.join(outputdir,ta_name,"lib")
@@ -26,17 +27,17 @@ def additional_packaging(ta_name=None,outputdir="output"):
 
     p = "geoipupdate_4.8.0_linux_amd64"
     url = f'https://github.com/maxmind/geoipupdate/releases/download/v4.8.0/{p}.tar.gz'
-    target_path = f'/tmp/{p}.tar.gz'
-
+    
     response = requests.get(url, stream=True)
     if response.status_code == 200:
-        with open(target_path, 'wb') as f:
-            f.write(response.raw.read())
+        f = NamedTemporaryFile(delete=False)
+        f.write(response.raw.read())
+        f.close()
 
-    # open file 
-    file = tarfile.open(target_path)     
-    # extracting file 
-    file.extractall('output/SecKit_SA_geolocation/bin/geoipupdate/')     
-    file.close() 
-    os.rename(f"output/SecKit_SA_geolocation/bin/geoipupdate/{p}","output/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64")
-    
+        # open file 
+        file = tarfile.open(f.name)     
+        # extracting file 
+        file.extractall('output/SecKit_SA_geolocation/bin/geoipupdate/')     
+        file.close() 
+        os.rename(f"output/SecKit_SA_geolocation/bin/geoipupdate/{p}","output/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64")
+        os.unlink(f.name)
