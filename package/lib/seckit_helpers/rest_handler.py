@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2020 Splunk Inc (Ryan Faircloth) <rfaircloth@splunk.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """
 This class makes creating a REST handler for Splunk easier.
 

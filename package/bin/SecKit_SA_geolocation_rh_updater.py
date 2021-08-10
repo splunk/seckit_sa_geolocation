@@ -1,8 +1,10 @@
+# SPDX-FileCopyrightText: 2020 Splunk Inc (Ryan Faircloth) <rfaircloth@splunk.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """
 This controller does the update
 """
-
-
 import json
 import logging
 import os
