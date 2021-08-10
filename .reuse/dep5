@@ -85,3 +85,6 @@ Files: README*
 Copyright: $YEAR $NAME <$CONTACT>
 License: Apache-2.0
 
+Files: semtag
+Copyright: $YEAR $NAME <$CONTACT>
+License: Apache-2.0
