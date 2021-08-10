@@ -73,6 +73,14 @@ Files: package/default/data/ui/views/*
 Copyright: $YEAR $NAME <$CONTACT>
 License: Apache-2.0
 
-Files: package/bin/geoipupdate/linux_amd64/*
-Copyright: 2018 - 2020 by MaxMind, Inc.
-License: MIT
+Files: *.lock
+Copyright: $YEAR $NAME <$CONTACT>
+License: Apache-2.0
+
+Files: README*
+Copyright: $YEAR $NAME <$CONTACT>
+License: Apache-2.0
+
+Files: semtag
+Copyright: $YEAR $NAME <$CONTACT>
+License: Apache-2.0
