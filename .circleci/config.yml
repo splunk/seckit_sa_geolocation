@@ -1,6 +1,6 @@
 ##
 ## SPDX-FileCopyrightText: 2021 Splunk, Inc. <sales@splunk.com>
-## SPDX-License-Identifier: LicenseRef-Splunk-1-2020
+## SPDX-License-Identifier: LicenseRef-Splunk-8-2021
 ##
 ##
 # jscpd:ignore-start
@@ -11,7 +11,7 @@ orbs:
     jobs:
       package:
         docker:
-          - image: circleci/buildpack-deps:stable
+          - image: circleci/buildpack-deps:oldstable
         resource_class: small
         steps:
           - checkout
@@ -37,6 +37,11 @@ orbs:
                 then
                   sudo npm install --global yarn
                   yarn
+                fi
+                if [ -f "build.gradle" ]
+                then
+                  sudo apt-get install -y gradle
+                  gradle -v
                 fi
 
           - run:
@@ -626,7 +631,7 @@ workflows:
             parameters:
               splunk_version: ["8.0", "8.2"]
               sc4s_version: ["1"]
-              test_set: ["ui-chrome"]
+              test_set: ["ui-chrome_grid"] # requires smartx >= 2.0.8 please check before merge
               resource_class: ["medium"]
           filters:
             branches:
