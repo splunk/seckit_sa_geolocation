@@ -367,6 +367,7 @@ jobs:
             docker cp dummy:/home/circleci/work/assets test-results/assets  || echo "ignoring..."
             docker cp dummy:/home/circleci/work/report.html test-results/report.html  || echo "ignoring..."
             docker cp dummy:/home/circleci/work/test-results/cim-compliance-report.md test-results/ || echo "ignoring..."
+            docker cp dummy:/home/circleci/work/cim_field_report.json test-results/ || echo "ignoring..."
             docker-compose -f docker-compose-ci.yml down || echo "ignoring..."
             exit "$test_exit_code"
       - store_artifacts:
