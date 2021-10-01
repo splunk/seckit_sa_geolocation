@@ -53,11 +53,6 @@ then
         ${TEST_SET}
         test_exit_code=$?
     fi
-    if [ ${TEST_TYPE} = "knowledge" ]
-    then
-        echo "Running cim field report..."
-        cim-field-report --splunk-host=splunk --splunk-password=Chang3d! --splunk-app="/home/circleci/work/package"
-    fi
 else
     # Execute the tests on Headless mode in local if UI_TEST_HEADLESS environment is set to "true"
     if [ "${UI_TEST_HEADLESS}" = "true" ]
