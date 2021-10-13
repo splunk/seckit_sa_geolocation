@@ -57,7 +57,7 @@ jobs:
             type=ref,event=pr
       - name: matrix
         id: matrix
-        uses: splunk/addonfactory-test-matrix-action@v1.1.1
+        uses: splunk/addonfactory-test-matrix-action@v1.3
 
   compliance-sample-scanner:
     runs-on: ubuntu-latest
