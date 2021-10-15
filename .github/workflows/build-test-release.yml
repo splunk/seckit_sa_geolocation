@@ -31,7 +31,7 @@ jobs:
           persist-credentials: false
       - name: Semantic Release
         id: version
-        uses: cycjimmy/semantic-release-action@v2.5.4
+        uses: cycjimmy/semantic-release-action@v2.6.0
         with:
           semantic_version: 17
           extra_plugins: |
@@ -220,7 +220,7 @@ jobs:
       - name: Semantic Release Get Next
         id: semantic
         if: github.event_name != 'pull_request'
-        uses: cycjimmy/semantic-release-action@v2.5.4
+        uses: cycjimmy/semantic-release-action@v2.6.0
         with:
           semantic_version: 17
           extra_plugins: |
@@ -1187,7 +1187,7 @@ jobs:
       - name: Semantic Release
         id: semantic
         if: ${{ steps.check.outputs.run-publish == 'true' }}
-        uses: cycjimmy/semantic-release-action@v2.5.4
+        uses: cycjimmy/semantic-release-action@v2.6.0
         with:
           semantic_version: 17
           extra_plugins: |
