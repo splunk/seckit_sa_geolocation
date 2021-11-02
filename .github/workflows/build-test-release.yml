@@ -31,7 +31,7 @@ jobs:
           persist-credentials: false
       - name: Semantic Release
         id: version
-        uses: cycjimmy/semantic-release-action@v2.5.4
+        uses: cycjimmy/semantic-release-action@v2.6.0
         with:
           semantic_version: 17
           extra_plugins: |
@@ -44,7 +44,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker meta
         id: docker_action_meta
-        uses: docker/metadata-action@v3.4.1
+        uses: docker/metadata-action@v3.6.0
         with:
           images: ghcr.io/${{ github.repository }}/container
           tags: |
@@ -57,7 +57,7 @@ jobs:
             type=ref,event=pr
       - name: matrix
         id: matrix
-        uses: splunk/addonfactory-test-matrix-action@v1.1.1
+        uses: splunk/addonfactory-test-matrix-action@v1.3
 
   compliance-sample-scanner:
     runs-on: ubuntu-latest
@@ -114,10 +114,12 @@ jobs:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
       - name: quality-lint
-        uses: github/super-linter@v4
+        uses: docker://ghcr.io/github/super-linter:slim-v4
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main
+          LINTER_RULES_PATH: /
+          PYTHON_ISORT_CONFIG_FILE: pyproject.toml
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FILTER_REGEX_EXCLUDE: README.md
   review_secrets:
@@ -143,7 +145,6 @@ jobs:
         id: semgrep
         uses: returntocorp/semgrep-action@v1
         with:
-          publishDeployment: ${{ secrets.SEMGREP_DEPLOYMENT_ID }}
           publishToken: ${{ secrets.SEMGREP_PUBLISH_TOKEN }}
 
   snyk:
@@ -156,7 +157,7 @@ jobs:
         with:
           python-version: 3.7
       - uses: snyk/actions/setup@master
-      - uses: actions/setup-go@v2.1.3
+      - uses: actions/setup-go@v2.1.4
         with:
           go-version: "1.13"
       - name: Snyk monitor
@@ -220,7 +221,7 @@ jobs:
       - name: Semantic Release Get Next
         id: semantic
         if: github.event_name != 'pull_request'
-        uses: cycjimmy/semantic-release-action@v2.5.4
+        uses: cycjimmy/semantic-release-action@v2.6.0
         with:
           semantic_version: 17
           extra_plugins: |
@@ -272,9 +273,9 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          echo "::set-output name=name::$(basename ${{ steps.slim.outputs.OUTPUT }})"
-          echo `basename ${{ steps.slim.outputs.OUTPUT }}`
-          aws s3 cp ${{ steps.slim.outputs.OUTPUT }} s3://ta-production-artifacts/ta-apps/
+          echo "::set-output name=name::$(basename "${{ steps.slim.outputs.OUTPUT }}")"
+          basename "${{ steps.slim.outputs.OUTPUT }}"
+          aws s3 cp "${{ steps.slim.outputs.OUTPUT }}" s3://ta-production-artifacts/ta-apps/
       - name: artifact-splunk-parts
         uses: actions/upload-artifact@v2
         with:
@@ -362,7 +363,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload coverage to Codecov
         if: ${{ steps.checkcodecov.outputs.ENABLED == 'true' }}
-        uses: codecov/codecov-action@v2.0.2
+        uses: codecov/codecov-action@v2.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
@@ -392,22 +393,38 @@ jobs:
           - "future"
           - "self-service"
           - "splunk_appinspect"
+          - "manual"
     steps:
+      - name: Checkout for manual tag
+        if: matrix.tags == 'manual'
+        uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
           name: package-splunkbase
           path: build/package/
-
       - name: Scan
         uses: splunk/appinspect-cli-action@v1
         with:
           app_path: build/package/
           included_tags: ${{ matrix.tags }}
+      - name: upload-appinspect-for-manual
+        if: always() && matrix.tags == 'manual'
+        uses: actions/upload-artifact@v2
+        with:
+          name: appinspect_manual_checks.json
+          path: appinspect_result.json
+      - name: upload-manual-check-markdown
+        if: matrix.tags == 'manual'
+        uses: actions/upload-artifact@v2
+        with:
+          name: manual_check_markdown.txt
+          path: manual_check_markdown.txt
 
   artifact-registry:
     runs-on: ubuntu-latest
     needs:
       - security-virustotal
+      - meta
     outputs:
       artifact: ${{ steps.artifactid.outputs.result }}
     steps:
@@ -420,8 +437,8 @@ jobs:
       - id: getappid
         run: |
           appid=$(jq -r '.info.id.name' package/app.manifest)
-          echo appid=$appid
-          echo "::set-output name=result::$(echo $appid)"
+          echo appid="$appid"
+          echo "::set-output name=result::$appid"
       - run: |
           curl -fsSL https://raw.githubusercontent.com/fishworks/gofish/main/scripts/install.sh | bash
           gofish init
@@ -432,12 +449,12 @@ jobs:
         uses: docker/login-action@v1.10.0
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v3.6.0
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
@@ -457,23 +474,23 @@ jobs:
           ${{ steps.meta.outputs.tags }}
           EOF
           pushd build/package/splunkbase/
-          PACKAGE=$(ls *)
-          echo $PACKAGE
-          mv $PACKAGE ${{ steps.getappid.outputs.result }}.spl
+          PACKAGE=$(ls ./*)
+          echo "$PACKAGE"
+          mv "$PACKAGE" "${{ steps.getappid.outputs.result }}".spl
           while IFS= read -r line
           do
             echo ">>$line<<"
             oras push \
                 --manifest-config /dev/null:application/vnd.splunk.ent.package.v1.tar+gzip \
-                $line \
-                ${{ steps.getappid.outputs.result }}.spl
+                "$line" \
+                "${{ steps.getappid.outputs.result }}".spl
             echo "  complete"
           done < /tmp/tags
           popd
       - name: Output artifact locator
         id: artifactid
         run: |
-          echo "::set-output name=result::$(echo ${{ fromJSON(steps.meta.outputs.json).tags[0] }})"
+          echo "::set-output name=result:: ${{ needs.meta.outputs.sc4s }}"
 
   setup:
     needs:
@@ -486,6 +503,7 @@ jobs:
       argo-server: ${{ steps.test-setup.outputs.argo-server }}
       argo-http1: ${{ steps.test-setup.outputs.argo-http1 }}
       argo-secure: ${{ steps.test-setup.outputs.argo-secure }}
+      argo-href: ""
       argo-base-href: ${{ steps.test-setup.outputs.argo-base-href }}
       argo-workflow-tmpl-name: ${{ steps.test-setup.outputs.argo-workflow-tmpl-name }}
       argo-namespace: ${{ steps.test-setup.outputs.argo-namespace }}
@@ -511,24 +529,24 @@ jobs:
           echo "::set-output name=argo-workflow-tmpl-name::ta-workflow"
 
           ADDON_NAME=$(crudini --get package/default/app.conf id name | tr '[:lower:]' '[:upper:]')
-          if [[ ! -z $(echo ${ADDON_NAME} | awk -F 'SPLUNK_TA_' '{print $2}') ]];
+          if [[ -n $(echo "${ADDON_NAME}" | awk -F 'SPLUNK_TA_' '{print $2}') ]];
           then
-              ADDON_NAME=$(echo ${ADDON_NAME} | awk -F 'SPLUNK_TA_' '{print $2}')
-          elif [[ ! -z $(echo ${ADDON_NAME} | awk -F '_FOR_SPLUNK' '{print $1}') ]];
+              ADDON_NAME=$(echo "${ADDON_NAME}" | awk -F 'SPLUNK_TA_' '{print $2}')
+          elif [[ -n $(echo "${ADDON_NAME}" | awk -F '_FOR_SPLUNK' '{print $1}') ]];
           then
-              ADDON_NAME=$(echo ${ADDON_NAME} | awk -F '_FOR_SPLUNK' '{print $1}')
+              ADDON_NAME=$(echo "${ADDON_NAME}" | awk -F '_FOR_SPLUNK' '{print $1}')
           fi
-          echo "::set-output name=addon-name::$(echo "$ADDON_NAME")"
+          echo "::set-output name=addon-name::\"$ADDON_NAME\""
 
-          JOB_NAME=`echo $ADDON_NAME | tail -c 16`-`echo ${GITHUB_SHA} | tail -c 8`-TEST-TYPE-${GITHUB_RUN_ID}
-          JOB_NAME=`echo $JOB_NAME | sed "s/[_.]/-/g"`
-          echo "::set-output name=job-name::$(echo wf-$JOB_NAME)"
+          JOB_NAME=$(echo "$ADDON_NAME" | tail -c 16)-$(echo "${GITHUB_SHA}" | tail -c 8)-TEST-TYPE-${GITHUB_RUN_ID}
+          JOB_NAME=${JOB_NAME//[_.]/-}
+          echo "::set-output name=job-name::wf-$JOB_NAME"
 
           LABELS="addon-name=${ADDON_NAME}"
-          echo "::set-output name=labels::$(echo $LABELS)"
+          echo "::set-output name=labels::$LABELS"
 
           ADDON_UPLOAD_PATH="s3://ta-production-artifacts/ta-apps/${{ needs.build.outputs.buildname }}"
-          echo "::set-output name=addon-upload-path::$(echo $ADDON_UPLOAD_PATH)"
+          echo "::set-output name=addon-upload-path::$ADDON_UPLOAD_PATH"
           echo "::set-output name=directory-path::/tmp"
           echo "::set-output name=s3-bucket::ta-production-artifacts"
   
@@ -553,7 +571,7 @@ jobs:
       ARGO_SECURE: ${{ needs.setup.outputs.argo-secure }}
       ARGO_BASE_HREF: ${{ needs.setup.outputs.argo-href }}
       ARGO_NAMESPACE: ${{ needs.setup.outputs.argo-namespace }}
-      SPLUNK_VERSION_BASE: ${{ matrix.splunk.version }}
+      SPLUNK_VERSION_BASE: ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }}
       TEST_TYPE: "knowledge"
       TEST_ARGS: ""
     steps:
@@ -569,25 +587,26 @@ jobs:
       - name: Read secrets from AWS Secrets Manager into environment variables
         id: get-argo-token
         run: |
-          ARGO_TOKEN=`aws secretsmanager get-secret-value --secret-id ta-github-workflow-automation-token | jq -r '.SecretString'`
-          echo "::set-output name=argo-token::$(echo $ARGO_TOKEN)"
+          ARGO_TOKEN=$(aws secretsmanager get-secret-value --secret-id ta-github-workflow-automation-token | jq -r '.SecretString')
+          echo "::set-output name=argo-token::$ARGO_TOKEN"
       - name: create job name
         id: create-job-name
+        shell: bash
         run: |
-          RANDOM_STRING=`head -3 /dev/urandom | tr -cd '[:lower:]' | cut -c -4`
+          RANDOM_STRING=$(head -3 /dev/urandom | tr -cd '[:lower:]' | cut -c -4)
           JOB_NAME=${{ needs.setup.outputs.job-name }}-${RANDOM_STRING}
-          JOB_NAME=`echo $JOB_NAME | sed -e "s/TEST-TYPE/${{ env.TEST_TYPE }}/g"`
-          JOB_NAME=`echo $JOB_NAME | sed "s/[_.]/-/g"`
-          JOB_NAME=`echo $JOB_NAME | tr '[:upper:]' '[:lower:]'`
-          echo "::set-output name=job-name::$(echo $JOB_NAME)"
+          JOB_NAME=${JOB_NAME//TEST-TYPE/${{ env.TEST_TYPE }}}
+          JOB_NAME=${JOB_NAME//[_.]/-}
+          JOB_NAME=$(echo "$JOB_NAME" | tr '[:upper:]' '[:lower:]')
+          echo "::set-output name=job-name::$JOB_NAME"
           
       - name: run-tests
         id: run-tests
         env:
           ARGO_TOKEN: ${{ steps.get-argo-token.outputs.argo-token }}
-        uses: splunk/wfe-test-runner-action@v1.4.5
+        uses: splunk/wfe-test-runner-action@v1.4.6
         with:
-          splunk: ${{ matrix.splunk.version }}
+          splunk: ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }}
           test-type: ${{ env.TEST_TYPE }}
           test-args: ""
           job-name: ${{ steps.create-job-name.outputs.job-name }}
@@ -620,13 +639,13 @@ jobs:
           set +e
           if [[ "${{ steps.is-pod-deleted.outputs.retry-workflow }}" == "true" ]]
           then
-            WORKFLOW_NAME=`argo resubmit -v -o json -n workflows ${{ steps.run-tests.outputs.workflow-name }} | jq -r .metadata.name`
-            echo "::set-output name=workflow-name::$(echo $WORKFLOW_NAME)"
-            argo logs --follow ${WORKFLOW_NAME} -n workflows || echo "... there was an error fetching logs, the workflow is still in progress. please wait for the workflow to complete ..."
+            WORKFLOW_NAME=$(argo resubmit -v -o json -n workflows "${{ steps.run-tests.outputs.workflow-name }}" | jq -r .metadata.name)
+            echo "::set-output name=workflow-name::$WORKFLOW_NAME"
+            argo logs --follow "${WORKFLOW_NAME}" -n workflows || echo "... there was an error fetching logs, the workflow is still in progress. please wait for the workflow to complete ..."
           else
             echo "No retry required"
-            argo wait ${{ steps.run-tests.outputs.workflow-name }} -n workflows
-            argo watch ${{ steps.run-tests.outputs.workflow-name }} -n workflows | grep "test-addon"
+            argo wait "${{ steps.run-tests.outputs.workflow-name }}" -n workflows
+            argo watch "${{ steps.run-tests.outputs.workflow-name }}" -n workflows | grep "test-addon"
           fi
       - name: check if workflow completed
         env:
@@ -635,18 +654,19 @@ jobs:
         if: always()
         run: |
           set +e
+          # shellcheck disable=SC2157
           if [ -z "${{ steps.retry-wf.outputs.workflow-name }}" ]; then
             WORKFLOW_NAME=${{ steps.run-tests.outputs.workflow-name }}
           else
             WORKFLOW_NAME="${{ steps.retry-wf.outputs.workflow-name }}"
           fi
-          ARGO_STATUS=`argo get ${WORKFLOW_NAME} -n workflows -o json | jq -r '.status.phase'`
-          echo "Status of workflow:" $ARGO_STATUS
+          ARGO_STATUS=$(argo get "${WORKFLOW_NAME}" -n workflows -o json | jq -r '.status.phase')
+          echo "Status of workflow:" "$ARGO_STATUS"
           while [ "$ARGO_STATUS" == "Running"  ] || [ "$ARGO_STATUS" == "Pending" ]
           do
               echo "... argo Workflow ${WORKFLOW_NAME} is running, waiting for it to complete."
-              argo wait ${WORKFLOW_NAME} -n workflows || true
-              ARGO_STATUS=`argo get ${WORKFLOW_NAME} -n workflows -o json | jq -r '.status.phase'`
+              argo wait "${WORKFLOW_NAME}" -n workflows || true
+              ARGO_STATUS=$(argo get "${WORKFLOW_NAME}" -n workflows -o json | jq -r '.status.phase')
           done
       - name: pull artifacts from s3 bucket
         if: always()
@@ -657,6 +677,7 @@ jobs:
       - name: pull logs from s3 bucket
         if: always()
         run: |
+          # shellcheck disable=SC2157
           if [ -z "${{ steps.retry-wf.outputs.workflow-name }}" ]; then
             WORKFLOW_NAME=${{ steps.run-tests.outputs.workflow-name }}
           else
@@ -668,20 +689,34 @@ jobs:
       - uses: actions/upload-artifact@v2.2.4
         if: always()
         with:
-          name: archive splunk ${{ matrix.splunk.version }} ${{ env.TEST_TYPE }} tests artifacts
+          name: archive splunk ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }} ${{ env.TEST_TYPE }} tests artifacts
           path: |
             ${{ needs.setup.outputs.directory-path }}/test-results
       - uses: actions/upload-artifact@v2.2.4
         if: always()
         with:
-          name: archive splunk ${{ matrix.splunk.version }} ${{ env.TEST_TYPE }} tests logs
+          name: archive splunk ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }} ${{ env.TEST_TYPE }} tests logs
           path: |
             ${{ needs.setup.outputs.directory-path }}/argo-logs
+      - name: Upload cim-compliance-report for ${{ matrix.splunk.version }}
+        uses: actions/upload-artifact@v2
+        if: ${{ matrix.splunk.islatest == true }}
+        with:
+          name: cim-compliance-report
+          path: |
+            ${{ needs.setup.outputs.directory-path }}/test-results/cim-compliance-report.md
+      - name: Upload cim-field-report for ${{ matrix.splunk.version }}
+        uses: actions/upload-artifact@v2
+        if: ${{ matrix.splunk.islatest == true }}
+        with:
+          name: cim-field-report
+          path: |
+            ${{ needs.setup.outputs.directory-path }}/test-results/cim_field_report.json
       - name: Test Report
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: splunk ${{ matrix.splunk.version }} ${{ env.TEST_TYPE }} test report
+          name: splunk ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }} ${{ env.TEST_TYPE }} test report
           path: "${{ needs.setup.outputs.directory-path }}/test-results/*.xml"
           reporter: java-junit
   run-requirement-tests:
@@ -720,23 +755,24 @@ jobs:
       - name: Read secrets from AWS Secrets Manager into environment variables
         id: get-argo-token
         run: |
-          ARGO_TOKEN=`aws secretsmanager get-secret-value --secret-id ta-github-workflow-automation-token | jq -r '.SecretString'`
-          echo "::set-output name=argo-token::$(echo $ARGO_TOKEN)"
+          ARGO_TOKEN=$(aws secretsmanager get-secret-value --secret-id ta-github-workflow-automation-token | jq -r '.SecretString')
+          echo "::set-output name=argo-token::$ARGO_TOKEN"
       - name: create job name
         id: create-job-name
+        shell: bash
         run: |
-          RANDOM_STRING=`head -3 /dev/urandom | tr -cd '[:lower:]' | cut -c -4`
+          RANDOM_STRING=$(head -3 /dev/urandom | tr -cd '[:lower:]' | cut -c -4)
           JOB_NAME=${{ needs.setup.outputs.job-name }}-${RANDOM_STRING}
-          JOB_NAME=`echo $JOB_NAME | sed -e "s/TEST-TYPE/${{ env.TEST_TYPE }}/g"`
-          JOB_NAME=`echo $JOB_NAME | sed "s/[_.]/-/g"`
-          JOB_NAME=`echo $JOB_NAME | tr '[:upper:]' '[:lower:]'`
-          echo "::set-output name=job-name::$(echo $JOB_NAME)"
+          JOB_NAME=${JOB_NAME//TEST-TYPE/${{ env.TEST_TYPE }}}
+          JOB_NAME=${JOB_NAME//[_.]/-}
+          JOB_NAME=$(echo "$JOB_NAME" | tr '[:upper:]' '[:lower:]')
+          echo "::set-output name=job-name::$JOB_NAME"
           
       - name: run-tests
         id: run-tests
         env:
           ARGO_TOKEN: ${{ steps.get-argo-token.outputs.argo-token }}
-        uses: splunk/wfe-test-runner-action@v1.4.5
+        uses: splunk/wfe-test-runner-action@v1.4.6
         with:
           splunk: ${{ matrix.splunk }}
           test-type: ${{ env.TEST_TYPE }}
@@ -771,13 +807,13 @@ jobs:
           set +e
           if [[ "${{ steps.is-pod-deleted.outputs.retry-workflow }}" == "true" ]]
           then
-            WORKFLOW_NAME=`argo resubmit -v -o json -n workflows ${{ steps.run-tests.outputs.workflow-name }} | jq -r .metadata.name`
-            echo "::set-output name=workflow-name::$(echo $WORKFLOW_NAME)"
-            argo logs --follow ${WORKFLOW_NAME} -n workflows || echo "... there was an error fetching logs, the workflow is still in progress. please wait for the workflow to complete ..."
+            WORKFLOW_NAME=$(argo resubmit -v -o json -n workflows "${{ steps.run-tests.outputs.workflow-name }}" | jq -r .metadata.name)
+            echo "::set-output name=workflow-name::$$WORKFLOW_NAME"
+            argo logs --follow "${WORKFLOW_NAME}" -n workflows || echo "... there was an error fetching logs, the workflow is still in progress. please wait for the workflow to complete ..."
           else
             echo "No retry required"
-            argo wait ${{ steps.run-tests.outputs.workflow-name }} -n workflows
-            argo watch ${{ steps.run-tests.outputs.workflow-name }} -n workflows | grep "test-addon"
+            argo wait "${{ steps.run-tests.outputs.workflow-name }}" -n workflows
+            argo watch "${{ steps.run-tests.outputs.workflow-name }}" -n workflows | grep "test-addon"
           fi
       - name: check if workflow completed
         env:
@@ -786,18 +822,19 @@ jobs:
         if: always()
         run: |
           set +e
+          # shellcheck disable=SC2157
           if [ -z "${{ steps.retry-wf.outputs.workflow-name }}" ]; then
             WORKFLOW_NAME=${{ steps.run-tests.outputs.workflow-name }}
           else
             WORKFLOW_NAME="${{ steps.retry-wf.outputs.workflow-name }}"
           fi
-          ARGO_STATUS=`argo get ${WORKFLOW_NAME} -n workflows -o json | jq -r '.status.phase'`
-          echo "Status of workflow:" $ARGO_STATUS
+          ARGO_STATUS=$(argo get "${WORKFLOW_NAME}" -n workflows -o json | jq -r '.status.phase')
+          echo "Status of workflow:" "$ARGO_STATUS"
           while [ "$ARGO_STATUS" == "Running"  ] || [ "$ARGO_STATUS" == "Pending" ]
           do
               echo "... argo Workflow ${WORKFLOW_NAME} is running, waiting for it to complete."
-              argo wait ${WORKFLOW_NAME} -n workflows || true
-              ARGO_STATUS=`argo get ${WORKFLOW_NAME} -n workflows -o json | jq -r '.status.phase'`
+              argo wait "${WORKFLOW_NAME}" -n workflows || true
+              ARGO_STATUS=$(argo get "${WORKFLOW_NAME}" -n workflows -o json | jq -r '.status.phase')
           done
       - name: pull artifacts from s3 bucket
         if: always()
@@ -808,6 +845,7 @@ jobs:
       - name: pull logs from s3 bucket
         if: always()
         run: |
+          # shellcheck disable=SC2157
           if [ -z "${{ steps.retry-wf.outputs.workflow-name }}" ]; then
             WORKFLOW_NAME=${{ steps.run-tests.outputs.workflow-name }}
           else
@@ -856,7 +894,7 @@ jobs:
       ARGO_SECURE: ${{ needs.setup.outputs.argo-secure }}
       ARGO_BASE_HREF: ${{ needs.setup.outputs.argo-href }}
       ARGO_NAMESPACE: ${{ needs.setup.outputs.argo-namespace }}
-      SPLUNK_VERSION_BASE: ${{ matrix.splunk.version }}
+      SPLUNK_VERSION_BASE: ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }}
       TEST_TYPE: "ui"
       TEST_ARGS: "--browser ${{ matrix.browser }}"
     steps:
@@ -872,24 +910,25 @@ jobs:
       - name: Read secrets from AWS Secrets Manager into environment variables
         id: get-argo-token
         run: |
-          ARGO_TOKEN=`aws secretsmanager get-secret-value --secret-id ta-github-workflow-automation-token | jq -r '.SecretString'`
-          echo "::set-output name=argo-token::$(echo $ARGO_TOKEN)"
+          ARGO_TOKEN=$(aws secretsmanager get-secret-value --secret-id ta-github-workflow-automation-token | jq -r '.SecretString')
+          echo "::set-output name=argo-token::$ARGO_TOKEN"
       - name: create job name
         id: create-job-name
+        shell: bash
         run: |
-          RANDOM_STRING=`head -3 /dev/urandom | tr -cd '[:lower:]' | cut -c -4`
+          RANDOM_STRING=$(head -3 /dev/urandom | tr -cd '[:lower:]' | cut -c -4)
           JOB_NAME=${{ needs.setup.outputs.job-name }}-${RANDOM_STRING}
-          JOB_NAME=`echo $JOB_NAME | sed -e "s/TEST-TYPE/${{ env.TEST_TYPE }}-${{ matrix.browser }}/g"`
-          JOB_NAME=`echo $JOB_NAME | sed "s/[_.:]/-/g"`
-          JOB_NAME=`echo $JOB_NAME | tr '[:upper:]' '[:lower:]'`
-          echo "::set-output name=job-name::$(echo $JOB_NAME)"
+          JOB_NAME=${JOB_NAME//TEST-TYPE/${{ env.TEST_TYPE }}-${{ matrix.browser }}}
+          JOB_NAME=${JOB_NAME//[_.:]/-}
+          JOB_NAME=$(echo "$JOB_NAME" | tr '[:upper:]' '[:lower:]')
+          echo "::set-output name=job-name::$JOB_NAME"
       - name: run-tests
         id: run-tests
         env:
           ARGO_TOKEN: ${{ steps.get-argo-token.outputs.argo-token }}
-        uses: splunk/wfe-test-runner-action@v1.4.5
+        uses: splunk/wfe-test-runner-action@v1.4.6
         with:
-          splunk: ${{ matrix.splunk.version }}
+          splunk: ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }}
           test-type: ${{ env.TEST_TYPE }}
           test-args: ${{ env.TEST_ARGS }}
           job-name: ${{ steps.create-job-name.outputs.job-name }}
@@ -922,13 +961,13 @@ jobs:
           set +e
           if [[ "${{ steps.is-pod-deleted.outputs.retry-workflow }}" == "true" ]]
           then
-            WORKFLOW_NAME=`argo resubmit -v -o json -n workflows ${{ steps.run-tests.outputs.workflow-name }} | jq -r .metadata.name`
-            echo "::set-output name=workflow-name::$(echo $WORKFLOW_NAME)"
-            argo logs --follow ${WORKFLOW_NAME} -n workflows || echo "... there was an error fetching logs, the workflow is still in progress. please wait for the workflow to complete ..."
+            WORKFLOW_NAME=$(argo resubmit -v -o json -n workflows "${{ steps.run-tests.outputs.workflow-name }}" | jq -r .metadata.name)
+            echo "::set-output name=workflow-name::$WORKFLOW_NAME"
+            argo logs --follow "${WORKFLOW_NAME}" -n workflows || echo "... there was an error fetching logs, the workflow is still in progress. please wait for the workflow to complete ..."
           else
             echo "No retry required"
-            argo wait ${{ steps.run-tests.outputs.workflow-name }} -n workflows
-            argo watch ${{ steps.run-tests.outputs.workflow-name }} -n workflows | grep "test-addon"
+            argo wait "${{ steps.run-tests.outputs.workflow-name }}" -n workflows
+            argo watch "${{ steps.run-tests.outputs.workflow-name }}" -n workflows | grep "test-addon"
           fi
       - name: check if workflow completed
         env:
@@ -937,18 +976,19 @@ jobs:
         shell: bash
         run: |
           set +e
+          # shellcheck disable=SC2157
           if [ -z "${{ steps.retry-wf.outputs.workflow-name }}" ]; then
             WORKFLOW_NAME=${{ steps.run-tests.outputs.workflow-name }}
           else
             WORKFLOW_NAME="${{ steps.retry-wf.outputs.workflow-name }}"
           fi
-          ARGO_STATUS=`argo get ${WORKFLOW_NAME} -n workflows -o json | jq -r '.status.phase'`
-          echo "Status of workflow:" $ARGO_STATUS
+          ARGO_STATUS=$(argo get "${WORKFLOW_NAME}" -n workflows -o json | jq -r '.status.phase')
+          echo "Status of workflow:" "$ARGO_STATUS"
           while [ "$ARGO_STATUS" == "Running"  ] || [ "$ARGO_STATUS" == "Pending" ]
           do
               echo "... argo Workflow ${WORKFLOW_NAME} is running, waiting for it to complete."
-              argo wait ${WORKFLOW_NAME} -n workflows || true
-              ARGO_STATUS=`argo get ${WORKFLOW_NAME} -n workflows -o json | jq -r '.status.phase'`
+              argo wait "${WORKFLOW_NAME}" -n workflows || true
+              ARGO_STATUS=$(argo get "${WORKFLOW_NAME}" -n workflows -o json | jq -r '.status.phase')
           done
       - name: pull artifacts from s3 bucket
         if: always()
@@ -959,6 +999,7 @@ jobs:
       - name: pull logs from s3 bucket
         if: always()
         run: |
+          # shellcheck disable=SC2157
           if [ -z "${{ steps.retry-wf.outputs.workflow-name }}" ]; then
             WORKFLOW_NAME=${{ steps.run-tests.outputs.workflow-name }}
           else
@@ -970,20 +1011,20 @@ jobs:
       - uses: actions/upload-artifact@v2.2.4
         if: always()
         with:
-          name: archive splunk ${{ matrix.splunk.version }} ${{ env.TEST_TYPE }} tests artifacts
+          name: archive splunk ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }} ${{ env.TEST_TYPE }} tests artifacts
           path: |
             ${{ needs.setup.outputs.directory-path }}/test-results
       - uses: actions/upload-artifact@v2.2.4
         if: always()
         with:
-          name: archive splunk ${{ matrix.splunk.version }} ${{ env.TEST_TYPE }} ${{ matrix.browser }} tests logs
+          name: archive splunk ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }} ${{ env.TEST_TYPE }} ${{ matrix.browser }} tests logs
           path: |
             ${{ needs.setup.outputs.directory-path }}/argo-logs
       - name: Test Report
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: splunk ${{ matrix.splunk.version }} ${{ env.TEST_TYPE }} ${{ matrix.browser }} test report
+          name: splunk ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }} ${{ env.TEST_TYPE }} ${{ matrix.browser }} test report
           path: "${{ needs.setup.outputs.directory-path }}/test-results/*.xml"
           reporter: java-junit
   run-modinput-tests:
@@ -1007,7 +1048,7 @@ jobs:
       ARGO_SECURE: ${{ needs.setup.outputs.argo-secure }}
       ARGO_BASE_HREF: ${{ needs.setup.outputs.argo-href }}
       ARGO_NAMESPACE: ${{ needs.setup.outputs.argo-namespace }}
-      SPLUNK_VERSION_BASE: ${{ matrix.splunk.version }}
+      SPLUNK_VERSION_BASE: ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }}
       TEST_TYPE: "modinput_functional"
       TEST_ARGS: ""
     steps:
@@ -1023,24 +1064,25 @@ jobs:
       - name: Read secrets from AWS Secrets Manager into environment variables
         id: get-argo-token
         run: |
-          ARGO_TOKEN=`aws secretsmanager get-secret-value --secret-id ta-github-workflow-automation-token | jq -r '.SecretString'`
-          echo "::set-output name=argo-token::$(echo $ARGO_TOKEN)"
+          ARGO_TOKEN=$(aws secretsmanager get-secret-value --secret-id ta-github-workflow-automation-token | jq -r '.SecretString')
+          echo "::set-output name=argo-token::$ARGO_TOKEN"
       - name: create job name
         id: create-job-name
+        shell: bash
         run: |
-          RANDOM_STRING=`head -3 /dev/urandom | tr -cd '[:lower:]' | cut -c -4`
+          RANDOM_STRING=$(head -3 /dev/urandom | tr -cd '[:lower:]' | cut -c -4)
           JOB_NAME=${{ needs.setup.outputs.job-name }}-${RANDOM_STRING}
-          JOB_NAME=`echo $JOB_NAME | sed -e "s/TEST-TYPE/${{ env.TEST_TYPE }}/g"`
-          JOB_NAME=`echo $JOB_NAME | sed "s/[_.]/-/g"`
-          JOB_NAME=`echo $JOB_NAME | tr '[:upper:]' '[:lower:]'`
-          echo "::set-output name=job-name::$(echo $JOB_NAME)"
+          JOB_NAME=${JOB_NAME//TEST-TYPE/${{ env.TEST_TYPE }}}
+          JOB_NAME=${JOB_NAME//[_.]/-}
+          JOB_NAME=$(echo "$JOB_NAME" | tr '[:upper:]' '[:lower:]')
+          echo "::set-output name=job-name::$JOB_NAME"
       - name: run-tests
         id: run-tests
         env:
           ARGO_TOKEN: ${{ steps.get-argo-token.outputs.argo-token }}
-        uses: splunk/wfe-test-runner-action@v1.4.5
+        uses: splunk/wfe-test-runner-action@v1.4.6
         with:
-          splunk: ${{ matrix.splunk.version }}
+          splunk: ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }}
           test-type: ${{ env.TEST_TYPE }}
           test-args: ${{ env.TEST_ARGS }}
           job-name: ${{ steps.create-job-name.outputs.job-name }}
@@ -1073,13 +1115,13 @@ jobs:
           set +e
           if [[ "${{ steps.is-pod-deleted.outputs.retry-workflow }}" == "true" ]]
           then
-            WORKFLOW_NAME=`argo resubmit -v -o json -n workflows ${{ steps.run-tests.outputs.workflow-name }} | jq -r .metadata.name`
-            echo "::set-output name=workflow-name::$(echo $WORKFLOW_NAME)"
-            argo logs --follow ${WORKFLOW_NAME} -n workflows || echo "... there was an error fetching logs, the workflow is still in progress. please wait for the workflow to complete ..."
+            WORKFLOW_NAME=$(argo resubmit -v -o json -n workflows "${{ steps.run-tests.outputs.workflow-name }}" | jq -r .metadata.name)
+            echo "::set-output name=workflow-name::$WORKFLOW_NAME"
+            argo logs --follow "${WORKFLOW_NAME}" -n workflows || echo "... there was an error fetching logs, the workflow is still in progress. please wait for the workflow to complete ..."
           else
             echo "No retry required"
-            argo wait ${{ steps.run-tests.outputs.workflow-name }} -n workflows
-            argo watch ${{ steps.run-tests.outputs.workflow-name }} -n workflows | grep "test-addon"
+            argo wait "${{ steps.run-tests.outputs.workflow-name }}" -n workflows
+            argo watch "${{ steps.run-tests.outputs.workflow-name }}" -n workflows | grep "test-addon"
           fi
       - name: check if workflow completed
         env:
@@ -1088,18 +1130,19 @@ jobs:
         shell: bash
         run: |
           set +e
+          # shellcheck disable=SC2157
           if [ -z "${{ steps.retry-wf.outputs.workflow-name }}" ]; then
             WORKFLOW_NAME=${{ steps.run-tests.outputs.workflow-name }}
           else
             WORKFLOW_NAME="${{ steps.retry-wf.outputs.workflow-name }}"
           fi
-          ARGO_STATUS=`argo get ${WORKFLOW_NAME} -n workflows -o json | jq -r '.status.phase'`
-          echo "Status of workflow:" $ARGO_STATUS
+          ARGO_STATUS=$(argo get "${WORKFLOW_NAME}" -n workflows -o json | jq -r '.status.phase')
+          echo "Status of workflow:" "$ARGO_STATUS"
           while [ "$ARGO_STATUS" == "Running"  ] || [ "$ARGO_STATUS" == "Pending" ]
           do
               echo "... argo Workflow ${WORKFLOW_NAME} is running, waiting for it to complete."
-              argo wait ${WORKFLOW_NAME} -n workflows || true
-              ARGO_STATUS=`argo get ${WORKFLOW_NAME} -n workflows -o json | jq -r '.status.phase'`
+              argo wait "${WORKFLOW_NAME}" -n workflows || true
+              ARGO_STATUS=$(argo get "${WORKFLOW_NAME}" -n workflows -o json | jq -r '.status.phase')
           done
       - name: pull artifacts from s3 bucket
         if: always()
@@ -1110,6 +1153,7 @@ jobs:
       - name: pull logs from s3 bucket
         if: always()
         run: |
+          # shellcheck disable=SC2157
           if [ -z "${{ steps.retry-wf.outputs.workflow-name }}" ]; then
             WORKFLOW_NAME=${{ steps.run-tests.outputs.workflow-name }}
           else
@@ -1121,20 +1165,20 @@ jobs:
       - uses: actions/upload-artifact@v2.2.4
         if: always()
         with:
-          name: archive splunk ${{ matrix.splunk.version }} ${{ env.TEST_TYPE }} tests artifacts
+          name: archive splunk ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }} ${{ env.TEST_TYPE }} tests artifacts
           path: |
             ${{ needs.setup.outputs.directory-path }}/test-results
       - uses: actions/upload-artifact@v2.2.4
         if: always()
         with:
-          name: archive splunk ${{ matrix.splunk.version }} ${{ env.TEST_TYPE }} tests logs
+          name: archive splunk ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }} ${{ env.TEST_TYPE }} tests logs
           path: |
             ${{ needs.setup.outputs.directory-path }}/argo-logs
       - name: Test Report
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: splunk ${{ matrix.splunk.version }} ${{ env.TEST_TYPE }} test report
+          name: splunk ${{ matrix.splunk.version }}${{ secrets.OTHER_TA_REQUIRED_CONFIGS }} ${{ env.TEST_TYPE }} test report
           path: "${{ needs.setup.outputs.directory-path }}/test-results/*.xml"
           reporter: java-junit
 
@@ -1167,8 +1211,8 @@ jobs:
         id: check
         shell: bash
         run: |
-          RUN_PUBLISH=`echo $NEEDS | jq ".[] |  select(  ( .result != \"skipped\" ) and .result != \"success\" ) | length == 0"`
-          if [[ $RUN_PUBLISH != *'false'* ]]
+          RUN_PUBLISH=$(echo "$NEEDS" | jq ".[] |  select(  ( .result != \"skipped\" ) and .result != \"success\" ) | length == 0")
+          if [[ "$RUN_PUBLISH" != *'false'* ]]
           then
               echo "::set-output name=run-publish::true"
           else
@@ -1187,7 +1231,7 @@ jobs:
       - name: Semantic Release
         id: semantic
         if: ${{ steps.check.outputs.run-publish == 'true' }}
-        uses: cycjimmy/semantic-release-action@v2.5.4
+        uses: cycjimmy/semantic-release-action@v2.6.0
         with:
           semantic_version: 17
           extra_plugins: |
@@ -1211,6 +1255,22 @@ jobs:
         id: download-package-splunkbase
         with:
           name: package-splunkbase
+          path: download/artifacts/deployment
+      - name: Download cim-compliance-report
+        id: download-cim-compliance-report
+        if: ${{ steps.semantic.outputs.new_release_published == 'true' }}
+        continue-on-error: true
+        uses: actions/download-artifact@v2
+        with:
+          name: cim-compliance-report
+          path: download/artifacts/deployment
+      - name: Download cim-field-report
+        id: download-cim-field-report
+        if: ${{ steps.semantic.outputs.new_release_published == 'true' }}
+        continue-on-error: true
+        uses: actions/download-artifact@v2
+        with:
+          name: cim-field-report
           path: download/artifacts/deployment
       - name: List of assets
         if: ${{ steps.semantic.outputs.new_release_published == 'true' }} 
