@@ -26,18 +26,3 @@ updates:
     target-branch: "main"
     schedule:
       interval: "daily"
-  - package-ecosystem: "pip"
-    directory: "/package/lib"
-    target-branch: "main"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "pip"
-    directory: "/package/lib/py2"
-    target-branch: "main"
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "pip"
-    directory: "/package/lib/py3"
-    target-branch: "main"
-    schedule:
-      interval: "daily"

@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: LicenseRef-Splunk-8-2021
 #
 #
-import pytest
-
 from pytest_splunk_addon.standard_lib.addon_basic import Basic
 
 

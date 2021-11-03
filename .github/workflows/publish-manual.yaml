@@ -11,8 +11,6 @@ jobs:
   validate_branch:
     name: validate_branch
     runs-on: ubuntu-latest
-    outputs: 
-      prerelease: ${{ steps.is_prerelease.outputs.prerelease }}
     steps:
       - name: validate_branch
         if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/main'
@@ -25,8 +23,6 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
     name: build
     runs-on: ubuntu-latest
-    outputs:
-      buildname: ${{ steps.buildupload.outputs.name }}
     steps:
       - uses: actions/checkout@v2
         with:
