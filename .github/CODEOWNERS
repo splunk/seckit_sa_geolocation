@@ -1,2 +1,32 @@
-* @rfaircloth-splunk
-package/etc/ @rfaircloth @mbonsack
+# By default products-gdi-lead-qa team is the owner of all files in repository
+*   @splunk/products-gdi-lead-qa
+
+# below files are owned by lead developers and lead qa
+.*                      @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
+/tests/                 @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
+pyproject.toml          @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
+poetry.lock             @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
+README-test.md          @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
+README.md               @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
+test_credentials.env    @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
+
+# below files are owned by lead qa
+/.github/                 @splunk/products-gdi-lead-qa 
+
+# below files are owned only by lead developers
+/package/               @splunk/products-gdi-lead-developers
+/ucc_ui_extensions/     @splunk/products-gdi-lead-developers
+.app_vetting.yaml       @splunk/products-gdi-lead-developers
+.uccignore              @splunk/products-gdi-lead-developers
+globalConfig.json       @splunk/products-gdi-lead-developers
+package.json            @splunk/products-gdi-lead-developers
+webpack.config.js       @splunk/products-gdi-lead-developers
+yarn.lock               @splunk/products-gdi-lead-developers
+additional_packaging.py @splunk/products-gdi-lead-developers
+
+# below files are owned by lead developers and sme
+.pytest.expect                  @splunk/products-gdi-lead-developers    @splunk/products-gdi-sme
+.pytest.expect.baseline         @splunk/products-gdi-lead-developers    @splunk/products-gdi-sme
+
+# below files are owned by sme
+/tests/requirement_test/logs/   @splunk/products-gdi-sme

@@ -1,51 +1,56 @@
 {
-  "schemaVersion": "1.0.0",
-  "info": {
-    "title": "SecKit Geolocation with Maxmind",
-    "id": {
-      "group": null,
-      "name": "SecKit_SA_geolocation",
-      "version": "4.0.0"
+    "schemaVersion": "1.0.0",
+    "info": {
+        "title": "SecKit Geolocation with Maxmind",
+        "id": {
+            "group": null,
+            "name": "SecKit_SA_geolocation",
+            "version": "4.0.0"
+        },
+        "author": [
+            {
+                "name": "Ryan Faircloth",
+                "email": null,
+                "company": null
+            }
+        ],
+        "releaseDate": null,
+        "description": "Enhanced IP Location lookup for free and commerical maxmind MMDB",
+        "classification": {
+            "intendedAudience": null,
+            "categories": [],
+            "developmentStatus": null
+        },
+        "commonInformationModels": null,
+        "license": {
+            "name": "Apache-2.0",
+            "text": "LICENSES/Apache-2.0.txt",
+            "uri": null
+        },
+        "privacyPolicy": {
+            "name": null,
+            "text": null,
+            "uri": null
+        },
+        "releaseNotes": {
+            "name": "README.md",
+            "text": null,
+            "uri": null
+        }
     },
-    "author": [
-      {
-        "name": "Ryan Faircloth",
-        "email": null,
-        "company": null
-      }
+    "dependencies": null,
+    "tasks": [
+        "geoipupdate",
+        "geoipupdate://main"
     ],
-    "releaseDate": null,
-    "description": "Enhanced IP Location lookup for free and commerical maxmind MMDB",
-    "classification": {
-      "intendedAudience": null,
-      "categories": [],
-      "developmentStatus": null
+    "inputGroups": null,
+    "incompatibleApps": null,
+    "platformRequirements": {
+        "splunk": {
+            "Enterprise": "*"
+        }
     },
-    "commonInformationModels": null,
-    "license": {
-      "name": "Apache-2.0",
-      "text": "LICENSES/Apache-2.0.txt",
-      "uri": null
-    },
-    "privacyPolicy": {
-      "name": null,
-      "text": null,
-      "uri": null
-    },
-    "releaseNotes": {
-      "name": "README.md",
-      "text": null,
-      "uri": null
-    }
-  },
-  "dependencies": null,
-  "tasks": ["geoipupdate","geoipupdate://main"],
-  "inputGroups": null,
-  "incompatibleApps": null,
-  "platformRequirements": {
-    "splunk": {
-      "Enterprise": "*"
-    }
-  },
-  "targetWorkloads": ["_search_heads"]
+    "targetWorkloads": [
+        "_search_heads"
+    ]
 }
