@@ -1,17 +1,14 @@
-# By default products-gdi-lead-qa team is the owner of all files in repository
-*   @splunk/products-gdi-lead-qa
-
 # below files are owned by lead developers and lead qa
 .*                      @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
 /tests/                 @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
-pyproject.toml          @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
-poetry.lock             @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
 README-test.md          @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
 README.md               @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
 test_credentials.env    @splunk/products-gdi-lead-qa    @splunk/products-gdi-lead-developers
 
 # below files are owned by lead qa
-/.github/                 @splunk/products-gdi-lead-qa 
+/.github/                 @splunk/products-gdi-lead-qa
+/LICENSES/                @splunk/products-gdi-lead-qa
+pytest.ini                @splunk/products-gdi-lead-qa
 
 # below files are owned only by lead developers
 /package/               @splunk/products-gdi-lead-developers
