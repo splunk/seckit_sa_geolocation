@@ -12,7 +12,7 @@ on:
 
 jobs:
   call-workflow:
-    uses: splunk/github-workflow-build-test-release/.github/workflows/reusable-build-test-release.yml@v1.0.1
+    uses: splunk/github-workflow-build-test-release/.github/workflows/reusable-build-test-release.yml@v1.0.2
     secrets:
       GH_TOKEN_ADMIN: ${{ secrets.GH_TOKEN_ADMIN }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
