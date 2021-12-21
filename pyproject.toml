@@ -16,21 +16,12 @@ geoip2 = "^4.2.0"
 requests = "^2.26.0"
 
 [tool.poetry.dev-dependencies]
-splunk-add-on-ucc-framework = "^5"
+splunk-add-on-ucc-framework = "^5.10.1"
 lovely-pytest-docker = "^0.2.1"
-reuse = "^0.13.0"
-pytest = "^6.2.4"
-pytest-xdist = "^2.3.0"
-pytest-ordering = "^0.6"
-pytest-splunk-addon = "^1.7.0"
+pytest-splunk-addon = "^1.11.4"
 pytest-expect = "^1.1.0"
 pytest-rerunfailures = "^10.1"
-requests = "^2.26.0"
-coverage = "^5.5"
-splunk-sdk = "^1.6.16"
 splunk-packaging-toolkit = "^1.0.1"
-isort = "^5.9.3"
-autoflake = "^1.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
