@@ -5,7 +5,6 @@
 """
 This controller does the update
 """
-import json
 import logging
 import os
 import re
@@ -14,9 +13,7 @@ import sys
 import tempfile
 from os.path import dirname
 
-from splunk import AuthorizationFailed, ResourceNotFound
 from splunk.clilib.bundle_paths import make_splunkhome_path
-from splunk.rest import simpleRequest
 
 ta_name = "SecKit_SA_geolocation"
 pattern = re.compile(r"[\\/]etc[\\/]apps[\\/][^\\/]+[\\/]bin[\\/]?$")

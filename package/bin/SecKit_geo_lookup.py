@@ -7,8 +7,8 @@ import csv
 import os.path
 import sys
 
-import import_declare_test
 import geoip2.database
+import import_declare_test
 
 """ An adapter that takes an ip as input and produces gelocatin data
     based on the max mind data sets

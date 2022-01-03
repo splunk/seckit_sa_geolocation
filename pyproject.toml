@@ -23,6 +23,9 @@ pytest-expect = "^1.1.0"
 pytest-rerunfailures = "^10.1"
 splunk-packaging-toolkit = "^1.0.1"
 
+[tool.isort]
+profile = "black"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
