@@ -4,12 +4,10 @@
 #
 #
 
-import glob
 import logging
 import os
 import shutil
 import tarfile
-from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import requests
