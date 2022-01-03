@@ -1,0 +1,70 @@
+check_for_auto_update_features:
+  comment: "This Add-on does update data files (mmdb) but does not selfupdate code"
+check_for_binary_files_without_source_code:
+  comment: "Third party bin sourced from author upstream release site https://github.com/maxmind/geoipupdate/releases"
+check_for_known_vulnerabilities_in_third_party_libraries:
+  comment: "Third party scanning relies on github dependabot"
+check_for_reverse_shells:
+  comment: "None"
+check_for_remote_code_execution_in_javascript:
+  comment: "None"
+check_external_data_sources:
+  comment: "External data sources from maxmind.com"
+check_splunk_logo:
+  comment: "None"
+check_built_in_import_function:
+  comment: "None"
+check_for_builtin_functions:
+  comment: "None"
+check_for_data_compression_and_archiving:
+  comment: "None"
+check_for_data_persistence:
+  comment: "Persists within app folder only"
+check_for_file_and_directory_access:
+  comment: "Access to data within app folder only"
+check_for_generic_operating_system_services:
+  comment: "None"
+check_for_importing_modules:
+  comment: "None"
+check_for_interprocess_communication_and_networking:
+  comment: "None"
+check_for_ms_windows_specific_services:
+  comment: "None Windows is not supported"
+check_for_plain_text_credentials_in_python:
+  comment: "None"
+check_for_python_runtime_services:
+  comment: "None"
+check_python_untrusted_xml_functions:
+  comment: "None"
+check_authorization_credentials:
+  comment: "None"
+check_embedded_links:
+  comment: "None"
+check_for_offensive_material:
+  comment: "None"
+check_fs_writes:
+  comment: "None"
+check_hard_coded_paths:
+  comment: "None"
+check_for_environment_variable_use_in_python:
+  comment: "Done"
+check_for_insecure_http_calls_in_python:
+  comment: "Done"
+check_for_stacktrace_returned_to_user:
+  comment: "Done"
+check_for_executable_flag:
+  comment: "Done"
+check_for_urls_in_files:
+  comment: "Done"
+check_dependencies:
+  comment: "Done"
+check_documented_included_open_source:
+  comment: "Done"
+check_editing_and_proofreading:
+  comment: "Done"
+check_requires_access_to_files_outside_apps_dir:
+  comment: "Does not require"
+check_install_on_claimed_targets:
+  comment: "Yes"
+check_link_includes_contact_info:
+  comment: "Yes"
