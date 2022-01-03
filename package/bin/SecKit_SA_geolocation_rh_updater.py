@@ -120,7 +120,7 @@ class GeoipUpdateHandler(rest_handler.RESTHandler):
                         ],
                         shell=True,
                         stderr=subprocess.STDOUT,
-                    )  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use
+                    )  # nosemgrep:
                 except CalledProcessError as e:
                     logger.exception(e)
                     logger.error("command args:\n")
