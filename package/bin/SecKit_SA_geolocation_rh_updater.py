@@ -114,9 +114,9 @@ class GeoipUpdateHandler(rest_handler.RESTHandler):
                             "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate "
                             + guargs
                         ],
-                        shell=True,
+                        shell=True,  # nosemgrep:
                         stderr=subprocess.STDOUT,
-                    )  # nosemgrep:
+                    )
                 except subprocess.CalledProcessError as e:
                     logger.exception(e)
                     logger.error("command args:\n")
