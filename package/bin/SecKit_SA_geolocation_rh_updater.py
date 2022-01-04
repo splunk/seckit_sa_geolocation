@@ -109,8 +109,7 @@ class GeoipUpdateHandler(rest_handler.RESTHandler):
 
                 try:
                     gcmd = f"$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate {guargs}"
-                    # nosemgrep
-                    subprocess.check_output(
+                    subprocess.check_output(  # nosemgrep
                         [gcmd],
                         shell=True,  # nosemgrep
                         stderr=subprocess.STDOUT,
