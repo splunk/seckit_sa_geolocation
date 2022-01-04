@@ -112,7 +112,7 @@ class GeoipUpdateHandler(rest_handler.RESTHandler):
                     # nosemgrep
                     subprocess.check_output(
                         [gcmd],
-                        shell=True,
+                        shell=True,  # nosemgrep
                         stderr=subprocess.STDOUT,
                     )
                 except subprocess.CalledProcessError as e:
