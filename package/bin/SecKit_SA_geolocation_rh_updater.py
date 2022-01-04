@@ -118,7 +118,7 @@ class GeoipUpdateHandler(rest_handler.RESTHandler):
                         shell=True,
                         stderr=subprocess.STDOUT,
                     )  # nosemgrep:
-                except CalledProcessError as e:
+                except subprocess.CalledProcessError as e:
                     logger.exception(e)
                     logger.error("command args:\n")
                     logger.error(e.cmd)
