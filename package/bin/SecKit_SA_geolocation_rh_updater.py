@@ -103,17 +103,15 @@ class GeoipUpdateHandler(rest_handler.RESTHandler):
                 file.flush()
                 guargs = str(
                     os.path.expandvars(
-                        "-v -d $SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/data/ -f "
-                        + file.name
+                        f"-v -d $SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/data/ -f {file.name}"
                     )
                 )
 
                 try:
-                    # nosemgrep:
+                    # nosemgrep
                     subprocess.check_output(
                         [
-                            "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate "
-                            + guargs
+                            f"$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate {guargs}"
                         ],
                         shell=True,
                         stderr=subprocess.STDOUT,
