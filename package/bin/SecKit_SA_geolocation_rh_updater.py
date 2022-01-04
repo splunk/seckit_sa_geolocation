@@ -109,12 +109,13 @@ class GeoipUpdateHandler(rest_handler.RESTHandler):
                 )
 
                 try:
+                    # nosemgrep:
                     subprocess.check_output(
                         [
                             "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate "
                             + guargs
                         ],
-                        shell=True,  # nosemgrep:
+                        shell=True,
                         stderr=subprocess.STDOUT,
                     )
                 except subprocess.CalledProcessError as e:
