@@ -13,6 +13,7 @@ import sys
 import tempfile
 from os.path import dirname
 
+from seckit_helpers import rest_handler
 from splunk.clilib.bundle_paths import make_splunkhome_path
 
 ta_name = "SecKit_SA_geolocation"
@@ -21,8 +22,6 @@ new_paths = [path for path in sys.path if not pattern.search(path) or ta_name in
 new_paths.append(os.path.join(dirname(dirname(__file__)), "lib"))
 new_paths.insert(0, os.path.sep.join([os.path.dirname(__file__), ta_name]))
 sys.path = new_paths
-
-from seckit_helpers import rest_handler
 
 
 def setup_logger(level):
@@ -148,7 +147,7 @@ class GeoipUpdateHandler(rest_handler.RESTHandler):
                 "status": 200,  # HTTP status code
             }
 
-        except:
+        except:  # noqa
 
             logger.exception(
                 "Exception generated when attempting to backup a lookup file"
