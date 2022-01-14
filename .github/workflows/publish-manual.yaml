@@ -8,7 +8,7 @@ on:
 
 jobs:
   call-workflow:
-    uses: splunk/github-workflow-publish-manual/.github/workflows/reusable-publish-manual.yaml@v1.0.1
+    uses: splunk/addonfactory-workflow-addon-manual-release/.github/workflows/reusable-publish-manual.yaml@v1.0.1
     secrets:
       GH_TOKEN_ADMIN: ${{ secrets.GH_TOKEN_ADMIN }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
