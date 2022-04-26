@@ -1,0 +1,19 @@
+
+   
+# jscpd:ignore-start
+name: build-test-release
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  fossa-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
+          fossa analyze --include-unused-deps
+        env:
+          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
