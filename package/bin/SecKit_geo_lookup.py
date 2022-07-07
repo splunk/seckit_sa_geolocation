@@ -97,14 +97,10 @@ def main():
                     anonreader = geoip2.database.Reader(anon_file)
                     anon_response = anonreader.anonymous_ip(result[ipfield])
                     result["is_anonymous"] = anon_response.is_anonymous
-                    result["is_anonymous_proxy"] = anon_response.is_anonymous_proxy
                     result["is_anonymous_vpn"] = anon_response.is_anonymous_vpn
                     result["is_hosting_provider"] = anon_response.is_hosting_provider
-                    result["is_legitimate_proxy"] = anon_response.is_legitimate_proxy
                     result["is_public_proxy"] = anon_response.is_public_proxy
-                    result[
-                        "is_satellite_provider"
-                    ] = anon_response.is_satellite_provider
+                    result["is_residential_proxy"] = anon_response.is_residential_proxy
                     result["is_tor_exit_node"] = anon_response.is_tor_exit_node
             except geoip2.errors.AddressNotFoundError:
                 pass
