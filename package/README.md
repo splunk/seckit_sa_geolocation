@@ -12,7 +12,7 @@ Supported databases:
 * ConnectionType (optional)
 
 
-# Installation 
+# Installation
 
 * This application requires Splunk Enterprise or Splunk Enterprise Cloud >=8.0
 * This application does not support search head clustering
@@ -24,7 +24,7 @@ Supported databases:
 
 ## Macros
 
-```text 
+```text
 | `seckit_iplocation(fieldname)`
 | `seckit_iplocation(fieldname,prefix)`
 ```
