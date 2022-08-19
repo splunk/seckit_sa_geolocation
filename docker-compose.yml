@@ -165,7 +165,7 @@ services:
       - SPLUNK_START_ARGS=--accept-license
     volumes:
       - results:/home/circleci/work
-
+  
   chrome-grid:
     image: selenium/standalone-chrome-debug:91.0
     shm_size: 2gb

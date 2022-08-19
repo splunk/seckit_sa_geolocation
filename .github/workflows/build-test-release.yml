@@ -7,12 +7,12 @@ on:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
   pull_request:
-    branches:
+    branches: 
       - "**"
 
 jobs:
   call-workflow:
-    uses: splunk/addonfactory-workflow-addon-release/.github/workflows/reusable-build-test-release.yml@v2.0
+    uses: splunk/addonfactory-workflow-addon-release/.github/workflows/reusable-build-test-release.yml@v1.7
     secrets:
       GH_TOKEN_ADMIN: ${{ secrets.GH_TOKEN_ADMIN }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

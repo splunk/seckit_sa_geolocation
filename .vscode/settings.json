@@ -1,0 +1,10 @@
+/*
+ * SPDX-FileCopyrightText: 2021 Splunk, Inc. <sales@splunk.com>
+ * SPDX-License-Identifier: LicenseRef-Splunk-8-2021
+ *
+ */
+{
+    "python.pythonPath": ".venv/bin/python",
+    "python.testing.pytestEnabled": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": true
+}

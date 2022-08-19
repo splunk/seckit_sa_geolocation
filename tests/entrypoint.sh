@@ -31,18 +31,18 @@ cp -f .pytest.expect ${TEST_SET}
 
 echo "Executing Tests..."
 RERUN_COUNT=${RERUN_COUNT:-1}
-if [ -z ${TEST_BROWSER} ]
+if [ -z ${TEST_BROWSER} ] 
 then
     # echo Test Args $@ ${TEST_DEBUG}  --reportportal -o "rp_endpoint=${RP_ENDPOINT}" -o "rp_launch_attributes=${RP_LAUNCH_ATTRIBUTES}" \
     # -o "rp_project=${RP_PROJECT}" -o "rp_launch=${RP_LAUNCH}" -o "rp_launch_description='${RP_LAUNCH_DESC}'" -o "rp_ignore_attributes='xfail' 'usefixture'" \
-    # ${TEST_SET}
-    echo Test Args $@ ${TEST_DEBUG}
-    ${TEST_SET}
-
+    # ${TEST_SET}     
+    echo Test Args $@ ${TEST_DEBUG}  
+    ${TEST_SET}     
+    
     if [ "${IMAGE_TAG}" = "2.7.17" ]
     then
         pytest $@ ${TEST_DEBUG} \
-        ${TEST_SET}
+        ${TEST_SET} 
         test_exit_code=$?
     else
         # pytest $@ ${TEST_DEBUG} \
@@ -65,15 +65,15 @@ else
         # echo Test Args $@ ${TEST_DEBUG}  --local --persist-browser --headless --reruns=${RERUN_COUNT} --browser=${TEST_BROWSER}\
         # --reportportal -o "rp_endpoint=${RP_ENDPOINT}" -o "rp_launch_attributes=${RP_LAUNCH_ATTRIBUTES}" \
         # -o "rp_project=${RP_PROJECT}" -o "rp_launch=${RP_LAUNCH}" -o "rp_launch_description='${RP_LAUNCH_DESC}'" -o "rp_ignore_attributes='xfail' 'usefixture'" \
-        # ${TEST_SET}
-
+        # ${TEST_SET} 
+        
         # pytest $@ ${TEST_DEBUG}  --local --persist-browser --headless --reruns=${RERUN_COUNT} --browser=${TEST_BROWSER} \
         # --reportportal -o "rp_endpoint=${RP_ENDPOINT}" -o "rp_launch_attributes=${RP_LAUNCH_ATTRIBUTES}" \
         # -o "rp_project=${RP_PROJECT}" -o "rp_launch=${RP_LAUNCH}" -o "rp_launch_description='${RP_LAUNCH_DESC}'" -o "rp_ignore_attributes='xfail' 'usefixture'" \
         # ${TEST_SET}
         pytest $@ ${TEST_DEBUG}  --local --persist-browser --headless --reruns=${RERUN_COUNT} --browser=${TEST_BROWSER} \
         ${TEST_SET}
-
+        
         test_exit_code=$?
     else
         echo "Check Saucelab connection..."
@@ -91,4 +91,4 @@ else
         test_exit_code=$?
     fi
 fi
-exit "$test_exit_code"
+exit "$test_exit_code" 
