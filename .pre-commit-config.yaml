@@ -5,13 +5,13 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements
       - id: trailing-whitespace
-        exclude: ^(tests/requirement_test/logs)
+        exclude: ^(tests/requirement_test/logs|tests/knowledge/samples|tests/escu/.escu_detections)
       - id: check-yaml
       - id: check-xml
       - id: check-toml
       - id: check-json
       - id: end-of-file-fixer
-        exclude: ^(tests/requirement_test/logs)
+        exclude: ^(tests/requirement_test/logs|tests/knowledge/samples|tests/escu/.escu_detections)
   - repo: https://github.com/psf/black
     rev: 22.3.0
     hooks:
