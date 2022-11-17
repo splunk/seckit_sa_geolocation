@@ -11,7 +11,7 @@ on:
 
 jobs:
   call-workflow:
-    uses: splunk/addonfactory-workflow-addon-release/.github/workflows/reusable-escu-manual-workflow.yml@v2.1
+    uses: splunk/addonfactory-workflow-escu-test/.github/workflows/reusable-escu-manual-workflow.yml@v1.0
     with:
       TA_BUILD: ${{ inputs.TA_BUILD }}
       TESTS: ${{ inputs.TESTS }}

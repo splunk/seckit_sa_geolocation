@@ -46,10 +46,15 @@ tests/functional
 .env
 src
 *_event
+*_events
+events.pickle
 *_wait
 !deps/build
 !package/appserver/static/js/build
 *.log
+!tests/**/*.log
+trace.*
+*_events.lock
 
 # ucc ui extensions
 yarn-error.log

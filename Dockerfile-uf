@@ -1,6 +1,7 @@
-ARG SPLUNK_VERSION=latest
-FROM splunk/universalforwarder:$SPLUNK_VERSION
-ARG SPLUNK_VERSION=latest
+# hardcoded SPLUNK_VERSION due to connection issues in versions > 9.0.0
+ARG SPLUNK_VERSION=8.2.6
+FROM splunk/universalforwarder:8.2.6
+ARG SPLUNK_VERSION=8.2.6
 ARG SPLUNK_APP_ID=TA_UNKNOWN
 ARG SPLUNK_APP_PACKAGE=$SPLUNK_APP_PACKAGE
 RUN echo Splunk VERSION=$SPLUNK_VERSION
