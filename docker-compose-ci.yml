@@ -41,7 +41,7 @@ services:
       - results:/home/circleci/work
 
   sc4s:
-    image: splunk/scs:${SC4S_VERSION}
+    image: ghcr.io/splunk/splunk-connect-for-syslog/container2:${SC4S_VERSION}
     hostname: sc4s
     #When this is enabled test_common will fail
     #    command: -det
