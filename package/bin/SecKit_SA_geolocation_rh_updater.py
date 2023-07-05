@@ -105,23 +105,35 @@ class GeoipUpdateHandler(rest_handler.RESTHandler):
                         )
 
                 file.flush()
-                guargs = str(
+                args = [
                     os.path.expandvars(
-                        "-v -d $SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/data/ -f "
-                        + file.name
-                    )
-                )
+                        "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate"
+                    ),
+                    "-v",
+                    "-d",
+                    os.path.expandvars(
+                        "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/data/"
+                    ),
+                    "-f",
+                    file.name,
+                ]
 
                 try:
                     subprocess.check_output(
                         [
-                            "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate "
-                            + guargs
-                        ],
-                        shell=True,
+                            "chmod",
+                            "+x",
+                            os.path.expandvars(
+                                "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate"
+                            ),
+                        ]
+                    )
+                    subprocess.check_output(
+                        args,
+                        shell=False,
                         stderr=subprocess.STDOUT,
                     )  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use
-                except CalledProcessError as e:
+                except subprocess.CalledProcessError as e:
                     logger.exception(e)
                     logger.error("command args:\n")
                     logger.error(e.cmd)
