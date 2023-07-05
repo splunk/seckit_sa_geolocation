@@ -121,8 +121,8 @@ class GeoipUpdateHandler(rest_handler.RESTHandler):
                 try:
                     subprocess.check_output(
                         [
-                            'chmod', 
-                            '+x', 
+                            'chmod',
+                            '+x',
                             os.path.expandvars(
                                 "$SPLUNK_HOME/etc/apps/SecKit_SA_geolocation/bin/geoipupdate/linux_amd64/geoipupdate"
                             ),
